@@ -180,7 +180,11 @@ class FirestoreMethods {
     return res;
   }
 
-  Future<void> plusMessage(String postId, String uid, List plus) async {
+  Future<void> plusMessage(
+    String postId,
+    String uid,
+    List plus,
+  ) async {
     try {
       if (plus.contains(uid)) {
         await _firestore.collection('posts').doc(postId).update({
@@ -200,7 +204,11 @@ class FirestoreMethods {
     }
   }
 
-  Future<void> minusMessage(String postId, String uid, List minus) async {
+  Future<void> minusMessage(
+    String postId,
+    String uid,
+    List minus,
+  ) async {
     try {
       if (minus.contains(uid)) {
         await _firestore.collection('posts').doc(postId).update({
