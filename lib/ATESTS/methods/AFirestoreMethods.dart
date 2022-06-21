@@ -265,6 +265,8 @@ class FirestoreMethods {
           'text': text,
           'commentId': commentId,
           'datePublished': DateTime.now(),
+          'likes': [],
+          'dislikes': [],
         });
       } else {
         print('Text is empty');
@@ -323,6 +325,151 @@ class FirestoreMethods {
         });
       } else {
         print('Text is empty');
+      }
+    } catch (e) {
+      print(
+        e.toString(),
+      );
+    }
+  }
+
+  //deleting comment
+  Future<void> deleteReply(String postId, String commentId, String replyId,) async {
+    try {
+      await _firestore
+          .collection('posts')
+          .doc(postId)
+          .collection('comments')
+          .doc(commentId)
+          .collection('replies')
+          .doc(replyId)
+          .delete();
+    } catch (err) {
+      print(err.toString());
+    }
+  }
+
+
+  Future<void> likeComment(
+      String postId, String commentId, String uid, List likes) async {
+    try {
+      if (likes.contains(uid)) {
+        await _firestore
+            .collection('posts')
+            .doc(postId)
+            .collection('comments')
+            .doc(commentId)
+            .update({
+          'likes': FieldValue.arrayRemove([uid]),
+        });
+      } else {
+        await _firestore
+            .collection('posts')
+            .doc(postId)
+            .collection('comments')
+            .doc(commentId)
+            .update({
+          'likes': FieldValue.arrayUnion([uid]),
+          'dislikes': FieldValue.arrayRemove([uid]),
+        });
+      }
+    } catch (e) {
+      print(
+        e.toString(),
+      );
+    }
+  }
+
+  Future<void> dislikeComment(
+      String postId, String commentId, String uid, List dislikes) async {
+    try {
+      if (dislikes.contains(uid)) {
+        await _firestore
+            .collection('posts')
+            .doc(postId)
+            .collection('comments')
+            .doc(commentId)
+            .update({
+          'dislikes': FieldValue.arrayRemove([uid]),
+        });
+      } else {
+        await _firestore
+            .collection('posts')
+            .doc(postId)
+            .collection('comments')
+            .doc(commentId)
+            .update({
+          'dislikes': FieldValue.arrayUnion([uid]),
+          'likes': FieldValue.arrayRemove([uid]),
+        });
+      }
+    } catch (e) {
+      print(
+        e.toString(),
+      );
+    }
+  }
+
+  Future<void> likeReply(
+      String postId, String commentId, String uid, List likes, String replyId,) async {
+    try {
+      if (likes.contains(uid)) {
+        await _firestore
+            .collection('posts')
+            .doc(postId)
+            .collection('comments')
+            .doc(commentId)
+            .collection('replies')
+            .doc(replyId)
+            .update({
+          'likes': FieldValue.arrayRemove([uid]),
+        });
+      } else {
+        await _firestore
+            .collection('posts')
+            .doc(postId)
+            .collection('comments')
+            .doc(commentId)
+            .collection('replies')
+            .doc(replyId)
+            .update({
+          'likes': FieldValue.arrayUnion([uid]),
+          'dislikes': FieldValue.arrayRemove([uid]),
+        });
+      }
+    } catch (e) {
+      print(
+        e.toString(),
+      );
+    }
+  }
+
+  Future<void> dislikeReply(
+      String postId, String commentId, String uid, List dislikes, String replyId,) async {
+    try {
+      if (dislikes.contains(uid)) {
+        await _firestore
+            .collection('posts')
+            .doc(postId)
+            .collection('comments')
+            .doc(commentId)
+            .collection('replies')
+            .doc(replyId)
+            .update({
+          'dislikes': FieldValue.arrayRemove([uid]),
+        });
+      } else {
+        await _firestore
+            .collection('posts')
+            .doc(postId)
+            .collection('comments')
+            .doc(commentId)
+            .collection('replies')
+            .doc(replyId)
+            .update({
+          'dislikes': FieldValue.arrayUnion([uid]),
+          'likes': FieldValue.arrayRemove([uid]),
+        });
       }
     } catch (e) {
       print(
