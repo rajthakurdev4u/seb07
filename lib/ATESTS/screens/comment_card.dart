@@ -1,3 +1,4 @@
+import 'package:aft/ATESTS/models/APost.dart';
 import 'package:aft/ATESTS/screens/full_message.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -18,17 +19,18 @@ class CommentCard extends StatefulWidget {
   final Function parentSetState;
 
   // Reply
+  final bool isReply;
+  final Post? parentPost;
   final String? parentCommentId;
   final FocusNode? parentFocusNode;
   final TextEditingController? parentReplyTextController;
-
-  final bool isReply;
 
   const CommentCard({
     Key? key,
 
     // Reply
     this.isReply = false,
+    this.parentPost,
     this.parentCommentId,
     this.parentFocusNode,
     this.parentReplyTextController,
@@ -442,6 +444,7 @@ class _CommentCardState extends State<CommentCard> {
                       return commentReplies != null
                           ? ReplyList(
                               commentReplies: commentReplies,
+                              parentPost: widget.parentPost,
                               parentCommentId: widget.snap['commentId'],
                               postId: widget.postId,
                               parentSetState: widget.parentSetState,
@@ -457,6 +460,7 @@ class _CommentCardState extends State<CommentCard> {
 
                     return ReplyList(
                       commentReplies: commentReplies,
+                      parentPost: widget.parentPost,
                       parentCommentId: widget.snap['commentId'],
                       postId: widget.postId,
                       parentSetState: widget.parentSetState,
@@ -638,6 +642,7 @@ class _CommentCardState extends State<CommentCard> {
 
 class ReplyList extends StatelessWidget {
   final commentReplies;
+  final Post? parentPost;
   final String? parentCommentId;
   final postId;
   final Function parentSetState;
@@ -647,6 +652,7 @@ class ReplyList extends StatelessWidget {
   const ReplyList(
       {Key? key,
       this.commentReplies,
+      this.parentPost,
       this.parentCommentId,
       this.postId,
       this.parentFocusNode,
@@ -669,8 +675,8 @@ class ReplyList extends StatelessWidget {
               postId: postId,
               parentFocusNode: parentFocusNode,
               parentReplyTextController: parentReplyTextController,
-              // minus: post.minus.contains(replySnap['uid']),
-              // plus: post.plus.contains(replySnap['uid']),
+              minus: parentPost?.minus.contains(replySnap['uid']),
+              plus: parentPost?.plus.contains(replySnap['uid']),
               parentSetState: parentSetState,
             );
           })

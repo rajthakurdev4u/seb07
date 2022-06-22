@@ -1169,6 +1169,7 @@ class CommentList extends StatelessWidget {
 
               return CommentCard(
                 snap: commentSnap,
+                parentPost: post,
                 postId: post.postId,
                 minus: post.minus.contains(commentSnap['uid']),
                 plus: post.plus.contains(commentSnap['uid']),
