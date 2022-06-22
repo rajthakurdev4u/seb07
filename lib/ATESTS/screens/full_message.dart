@@ -727,7 +727,6 @@ class _FullMessageState extends State<FullMessage> {
                                         .collection('posts')
                                         .doc(_post.postId)
                                         .collection('comments')
-
                                         // Sort
                                         .orderBy(_selectedCommentSort.key,
                                             descending:
@@ -737,7 +736,10 @@ class _FullMessageState extends State<FullMessage> {
                                         .collection('posts')
                                         .doc(_post.postId)
                                         .collection('comments')
-
+                                        // Sort
+                                        .orderBy(_selectedCommentSort.key,
+                                            descending:
+                                                _selectedCommentSort.value)
                                         // Filter
                                         .where(_selectedCommentFilter.value,
                                             whereIn: (_post
@@ -748,11 +750,6 @@ class _FullMessageState extends State<FullMessage> {
                                                 ? _post.toJson()[
                                                     _selectedCommentFilter.key]
                                                 : ['placeholder_uid']))
-
-                                        // Sort
-                                        .orderBy(_selectedCommentSort.key,
-                                            descending:
-                                                _selectedCommentSort.value)
                                         .snapshots(),
                                 builder: (content, snapshot) {
                                   return Text(
