@@ -78,8 +78,8 @@ class _CommentCardState extends State<CommentCard> {
         ? widget.parentCommentId == currentReplyCommentId
         : widget.snap['commentId'] == currentReplyCommentId;
 
-    _likes = widget.snap['likes'].length;
-    _dislikes = widget.snap['dislikes'].length;
+    _likes = widget.snap['likes']?.length ?? 0;
+    _dislikes = widget.snap['dislikes']?.length ?? 0;
 
     return Column(
       children: [
@@ -151,7 +151,8 @@ class _CommentCardState extends State<CommentCard> {
                                     // color: Colors.brown,
                                     alignment: Alignment.centerRight,
                                     child: Visibility(
-                                      visible: widget.snap['uid'] == user.uid,
+                                      visible:
+                                          widget.snap['uid'] == user.uid,
                                       child: InkWell(
                                         onTap: () {
                                           showDialog(
@@ -189,13 +190,12 @@ class _CommentCardState extends State<CommentCard> {
                                                                 .pop();
                                                           },
                                                           child: Container(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                        .symmetric(
-                                                                    vertical:
-                                                                        12,
-                                                                    horizontal:
-                                                                        16),
+                                                            padding: const EdgeInsets
+                                                                    .symmetric(
+                                                                vertical:
+                                                                    12,
+                                                                horizontal:
+                                                                    16),
                                                             child: Text(e),
                                                           ),
                                                         ),
@@ -218,7 +218,8 @@ class _CommentCardState extends State<CommentCard> {
                                 DateFormat.yMMMd().format(
                                     widget.snap['datePublished'].toDate()),
                                 style: const TextStyle(
-                                    fontSize: 12, fontWeight: FontWeight.w400),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400),
                               ),
                             ),
                           ],
@@ -259,7 +260,8 @@ class _CommentCardState extends State<CommentCard> {
                         children: [
                           LikeAnimation(
                             isAnimating:
-                                widget.snap['likes'].contains(user.uid),
+                                widget.snap['likes']?.contains(user.uid) ??
+                                    false,
                             child: InkWell(
                               onTap: () async {
                                 widget.isReply
@@ -268,12 +270,14 @@ class _CommentCardState extends State<CommentCard> {
                                         widget.parentCommentId!,
                                         user.uid,
                                         widget.snap['likes'],
+                                        widget.snap['dislikes'],
                                         widget.snap['replyId'])
                                     : await FirestoreMethods().likeComment(
                                         widget.postId,
                                         widget.snap['commentId'],
                                         user.uid,
                                         widget.snap['likes'],
+                                        widget.snap['dislikes'],
                                       );
                               },
                               child: Row(
@@ -282,9 +286,11 @@ class _CommentCardState extends State<CommentCard> {
                                     child: Icon(
                                       Icons.thumb_up,
                                       color: widget.snap['likes']
-                                              .contains(user.uid)
+                                                  ?.contains(user.uid) ??
+                                              false
                                           ? Colors.blueAccent
-                                          : Color.fromARGB(255, 206, 204, 204),
+                                          : Color.fromARGB(
+                                              255, 206, 204, 204),
                                       size: 16.0,
                                     ),
                                   ),
@@ -300,8 +306,9 @@ class _CommentCardState extends State<CommentCard> {
                           ),
                           Container(width: 30),
                           LikeAnimation(
-                            isAnimating:
-                                widget.snap['dislikes'].contains(user.uid),
+                            isAnimating: widget.snap['dislikes']
+                                    ?.contains(user.uid) ??
+                                false,
                             child: InkWell(
                               onTap: () async {
                                 widget.isReply
@@ -309,12 +316,15 @@ class _CommentCardState extends State<CommentCard> {
                                         widget.postId,
                                         widget.parentCommentId!,
                                         user.uid,
+                                        widget.snap['likes'],
                                         widget.snap['dislikes'],
                                         widget.snap['replyId'])
-                                    : await FirestoreMethods().dislikeComment(
+                                    : await FirestoreMethods()
+                                        .dislikeComment(
                                         widget.postId,
                                         widget.snap['commentId'],
                                         user.uid,
+                                        widget.snap['likes'],
                                         widget.snap['dislikes'],
                                       );
                               },
@@ -324,9 +334,11 @@ class _CommentCardState extends State<CommentCard> {
                                     Icons.thumb_down,
                                     size: 16,
                                     color: widget.snap['dislikes']
-                                            .contains(user.uid)
+                                                ?.contains(user.uid) ??
+                                            false
                                         ? Colors.blueAccent
-                                        : Color.fromARGB(255, 206, 204, 204),
+                                        : Color.fromARGB(
+                                            255, 206, 204, 204),
                                   ),
                                   Container(width: 6),
                                   Text('$_dislikes',
@@ -440,7 +452,8 @@ class _CommentCardState extends State<CommentCard> {
                       .orderBy('datePublished', descending: false)
                       .snapshots(),
                   builder: (content, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
+                    if (snapshot.connectionState ==
+                        ConnectionState.waiting) {
                       return commentReplies != null
                           ? ReplyList(
                               commentReplies: commentReplies,
@@ -494,8 +507,8 @@ class _CommentCardState extends State<CommentCard> {
                     Container(
                       // color: Colors.orange,
                       child: Padding(
-                        padding:
-                            const EdgeInsets.only(top: 8, left: 8, bottom: 8),
+                        padding: const EdgeInsets.only(
+                            top: 8, left: 8, bottom: 8),
                         child: CircleAvatar(
                           backgroundImage: NetworkImage(
                             user.photoUrl,
@@ -506,7 +519,8 @@ class _CommentCardState extends State<CommentCard> {
                     ),
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.only(left: 16, right: 8.0),
+                        padding:
+                            const EdgeInsets.only(left: 16, right: 8.0),
                         child: Container(
                           child: TextField(
                             controller: _replyController,

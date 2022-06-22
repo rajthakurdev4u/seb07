@@ -266,7 +266,9 @@ class FirestoreMethods {
           'commentId': commentId,
           'datePublished': DateTime.now(),
           'likes': [],
+          'likeCount': 0,
           'dislikes': [],
+          'dislikeCount': 0,
         });
       } else {
         print('Text is empty');
@@ -321,7 +323,9 @@ class FirestoreMethods {
           'replyId': replyId,
           'datePublished': DateTime.now(),
           'likes': [],
+          'likeCount': 0,
           'dislikes': [],
+          'dislikeCount': 0,
         });
       } else {
         print('Text is empty');
@@ -334,7 +338,11 @@ class FirestoreMethods {
   }
 
   //deleting comment
-  Future<void> deleteReply(String postId, String commentId, String replyId,) async {
+  Future<void> deleteReply(
+    String postId,
+    String commentId,
+    String replyId,
+  ) async {
     try {
       await _firestore
           .collection('posts')
@@ -349,9 +357,13 @@ class FirestoreMethods {
     }
   }
 
-
   Future<void> likeComment(
-      String postId, String commentId, String uid, List likes) async {
+    String postId,
+    String commentId,
+    String uid,
+    List likes,
+    List dislikes,
+  ) async {
     try {
       if (likes.contains(uid)) {
         await _firestore
@@ -361,17 +373,25 @@ class FirestoreMethods {
             .doc(commentId)
             .update({
           'likes': FieldValue.arrayRemove([uid]),
+          'likeCount': FieldValue.increment(-1),
         });
       } else {
+        var updateMap = {
+          'likes': FieldValue.arrayUnion([uid]),
+          'likeCount': FieldValue.increment(1),
+          'dislikes': FieldValue.arrayRemove([uid]),
+        };
+
+        if (dislikes.contains(uid)) {
+          updateMap['dislikeCount'] = FieldValue.increment(-1);
+        }
+
         await _firestore
             .collection('posts')
             .doc(postId)
             .collection('comments')
             .doc(commentId)
-            .update({
-          'likes': FieldValue.arrayUnion([uid]),
-          'dislikes': FieldValue.arrayRemove([uid]),
-        });
+            .update(updateMap);
       }
     } catch (e) {
       print(
@@ -381,7 +401,12 @@ class FirestoreMethods {
   }
 
   Future<void> dislikeComment(
-      String postId, String commentId, String uid, List dislikes) async {
+    String postId,
+    String commentId,
+    String uid,
+    List likes,
+    List dislikes,
+  ) async {
     try {
       if (dislikes.contains(uid)) {
         await _firestore
@@ -391,17 +416,25 @@ class FirestoreMethods {
             .doc(commentId)
             .update({
           'dislikes': FieldValue.arrayRemove([uid]),
+          'dislikeCount': FieldValue.increment(-1),
         });
       } else {
+        var updateMap = {
+          'dislikes': FieldValue.arrayUnion([uid]),
+          'dislikeCount': FieldValue.increment(1),
+          'likes': FieldValue.arrayRemove([uid]),
+        };
+
+        if (likes.contains(uid)) {
+          updateMap['likeCount'] = FieldValue.increment(-1);
+        }
+
         await _firestore
             .collection('posts')
             .doc(postId)
             .collection('comments')
             .doc(commentId)
-            .update({
-          'dislikes': FieldValue.arrayUnion([uid]),
-          'likes': FieldValue.arrayRemove([uid]),
-        });
+            .update(updateMap);
       }
     } catch (e) {
       print(
@@ -411,7 +444,13 @@ class FirestoreMethods {
   }
 
   Future<void> likeReply(
-      String postId, String commentId, String uid, List likes, String replyId,) async {
+    String postId,
+    String commentId,
+    String uid,
+    List likes,
+    List dislikes,
+    String replyId,
+  ) async {
     try {
       if (likes.contains(uid)) {
         await _firestore
@@ -423,8 +462,19 @@ class FirestoreMethods {
             .doc(replyId)
             .update({
           'likes': FieldValue.arrayRemove([uid]),
+          'likeCount': FieldValue.increment(-1),
         });
       } else {
+        var updateMap = {
+          'likes': FieldValue.arrayUnion([uid]),
+          'likeCount': FieldValue.increment(1),
+          'dislikes': FieldValue.arrayRemove([uid]),
+        };
+
+        if (dislikes.contains(uid)) {
+          updateMap['dislikeCount'] = FieldValue.increment(-1);
+        }
+
         await _firestore
             .collection('posts')
             .doc(postId)
@@ -432,10 +482,7 @@ class FirestoreMethods {
             .doc(commentId)
             .collection('replies')
             .doc(replyId)
-            .update({
-          'likes': FieldValue.arrayUnion([uid]),
-          'dislikes': FieldValue.arrayRemove([uid]),
-        });
+            .update(updateMap);
       }
     } catch (e) {
       print(
@@ -445,7 +492,13 @@ class FirestoreMethods {
   }
 
   Future<void> dislikeReply(
-      String postId, String commentId, String uid, List dislikes, String replyId,) async {
+    String postId,
+    String commentId,
+    String uid,
+    List likes,
+    List dislikes,
+    String replyId,
+  ) async {
     try {
       if (dislikes.contains(uid)) {
         await _firestore
@@ -457,8 +510,19 @@ class FirestoreMethods {
             .doc(replyId)
             .update({
           'dislikes': FieldValue.arrayRemove([uid]),
+          'dislikeCount': FieldValue.increment(-1),
         });
       } else {
+        var updateMap = {
+          'dislikes': FieldValue.arrayUnion([uid]),
+          'dislikeCount': FieldValue.increment(1),
+          'likes': FieldValue.arrayRemove([uid]),
+        };
+
+        if (likes.contains(uid)) {
+          updateMap['likeCount'] = FieldValue.increment(-1);
+        }
+
         await _firestore
             .collection('posts')
             .doc(postId)
@@ -466,10 +530,7 @@ class FirestoreMethods {
             .doc(commentId)
             .collection('replies')
             .doc(replyId)
-            .update({
-          'dislikes': FieldValue.arrayUnion([uid]),
-          'likes': FieldValue.arrayRemove([uid]),
-        });
+            .update(updateMap);
       }
     } catch (e) {
       print(

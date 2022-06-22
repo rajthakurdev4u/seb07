@@ -69,7 +69,7 @@ class _FullMessageState extends State<FullMessage> {
   bool filter = false;
 
   List<CommentSort> commentSorts = [
-    CommentSort(label: 'Most Popular', key: 'likes', value: true),
+    CommentSort(label: 'Most Popular', key: 'likeCount', value: true),
     CommentSort(label: 'Most Recent', key: 'datePublished', value: true),
   ];
 
