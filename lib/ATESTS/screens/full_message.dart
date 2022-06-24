@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:aft/ATESTS/models/APost.dart';
 import 'package:aft/ATESTS/models/AUser.dart';
+import 'package:aft/ATESTS/other/AUtils.dart';
 import 'package:aft/ATESTS/provider/AUserProvider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
@@ -157,12 +158,6 @@ class _FullMessageState extends State<FullMessage> {
       gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{},
     );
     final User? user = Provider.of<UserProvider>(context).getUser;
-    if (user == null) {
-      return const Center(
-          child: CircularProgressIndicator(
-        color: Colors.black,
-      ));
-    }
 
     print("_selectedCommentFilter.key: ${_selectedCommentFilter.key}");
     print("_post.toJson(): ${_post.toJson()}");
@@ -304,48 +299,53 @@ class _FullMessageState extends State<FullMessage> {
                                     child: Padding(
                                       padding:
                                           const EdgeInsets.only(right: 4.0),
-                                      child: Container(
-                                        // color: Colors.brown,
-                                        alignment: Alignment.centerRight,
-                                        child: IconButton(
-                                          onPressed: () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (context) => Dialog(
-                                                child: ListView(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                      vertical: 16,
-                                                    ),
-                                                    shrinkWrap: true,
-                                                    children: [
-                                                      'Delete',
-                                                    ]
-                                                        .map(
-                                                          (e) => InkWell(
-                                                            onTap: () async {
-                                                              FirestoreMethods()
-                                                                  .deletePost(_post
-                                                                      .postId);
-                                                              Navigator.of(
-                                                                      context)
-                                                                  .pop();
-                                                            },
-                                                            child: Container(
-                                                              padding: const EdgeInsets
-                                                                      .symmetric(
-                                                                  vertical: 12,
-                                                                  horizontal:
-                                                                      16),
-                                                              child: Text(e),
+                                      child: Visibility(
+                                        visible: _post.uid == user?.uid,
+                                        child: Container(
+                                          // color: Colors.brown,
+                                          alignment: Alignment.centerRight,
+                                          child: IconButton(
+                                            onPressed: () {
+                                              showDialog(
+                                                context: context,
+                                                builder: (context) => Dialog(
+                                                  child: ListView(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                        vertical: 16,
+                                                      ),
+                                                      shrinkWrap: true,
+                                                      children: [
+                                                        'Delete',
+                                                      ]
+                                                          .map(
+                                                            (e) => InkWell(
+                                                              onTap: () async {
+                                                                FirestoreMethods()
+                                                                    .deletePost(
+                                                                        _post
+                                                                            .postId);
+                                                                Navigator.of(
+                                                                        context)
+                                                                    .pop();
+                                                              },
+                                                              child: Container(
+                                                                padding: const EdgeInsets
+                                                                        .symmetric(
+                                                                    vertical:
+                                                                        12,
+                                                                    horizontal:
+                                                                        16),
+                                                                child: Text(e),
+                                                              ),
                                                             ),
-                                                          ),
-                                                        )
-                                                        .toList()),
-                                              ),
-                                            );
-                                          },
-                                          icon: const Icon(Icons.more_vert),
+                                                          )
+                                                          .toList()),
+                                                ),
+                                              );
+                                            },
+                                            icon: const Icon(Icons.more_vert),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -592,15 +592,19 @@ class _FullMessageState extends State<FullMessage> {
                                                     child: IconButton(
                                                       iconSize: 25,
                                                       onPressed: () async {
-                                                        await FirestoreMethods()
-                                                            .plusMessage(
-                                                          _post.postId,
-                                                          user.uid,
-                                                          _post.plus,
-                                                        );
+                                                        performLoggedUserAction(
+                                                            context: context,
+                                                            action: () async {
+                                                              await FirestoreMethods()
+                                                                  .plusMessage(
+                                                                _post.postId,
+                                                                user?.uid ?? '',
+                                                                _post.plus,
+                                                              );
+                                                            });
                                                       },
                                                       icon: _post.plus.contains(
-                                                              user.uid)
+                                                              user?.uid ?? '')
                                                           ? const Icon(
                                                               Icons.add_circle,
                                                               color:
@@ -646,21 +650,25 @@ class _FullMessageState extends State<FullMessage> {
                                                   child: IconButton(
                                                     iconSize: 25,
                                                     onPressed: () async {
-                                                      await FirestoreMethods()
-                                                          .minusMessage(
-                                                        _post.postId,
-                                                        user.uid,
-                                                        _post.minus,
-                                                      );
+                                                      performLoggedUserAction(
+                                                          context: context,
+                                                          action: () async {
+                                                            await FirestoreMethods()
+                                                                .minusMessage(
+                                                              _post.postId,
+                                                              user?.uid ?? '',
+                                                              _post.minus,
+                                                            );
+                                                          });
                                                     },
                                                     icon: _post.minus
-                                                            .contains(user.uid)
-                                                        ? Icon(
+                                                            .contains(user?.uid)
+                                                        ? const Icon(
                                                             Icons
                                                                 .do_not_disturb_on,
                                                             color: Colors.red,
                                                           )
-                                                        : Icon(
+                                                        : const Icon(
                                                             Icons
                                                                 .do_not_disturb_on,
                                                             color:
@@ -796,14 +804,16 @@ class _FullMessageState extends State<FullMessage> {
                         // shadowColor: Colors.black,
                         borderRadius: BorderRadius.circular(0),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
                               // color: Colors.orange,
                               child: Padding(
-                                padding: const EdgeInsets.only(left: 8.0),
+                                padding: const EdgeInsets.only(
+                                    left: 8.0, top: 12, bottom: 12),
                                 child: CircleAvatar(
                                   backgroundImage: NetworkImage(
-                                    user.photoUrl,
+                                    user?.photoUrl ?? '',
                                   ),
                                   radius: 18,
                                 ),
@@ -817,7 +827,7 @@ class _FullMessageState extends State<FullMessage> {
                                   child: TextField(
                                     controller: _commentController,
                                     maxLines: null,
-                                    decoration: InputDecoration(
+                                    decoration: const InputDecoration(
                                       hintText: 'Write a comment...',
                                       // hintText: 'Comment as ${user.username}',
                                       border: InputBorder.none,
@@ -833,31 +843,39 @@ class _FullMessageState extends State<FullMessage> {
                             ),
                             InkWell(
                               onTap: () async {
-                                await FirestoreMethods().postComment(
-                                    _post.postId,
-                                    _commentController.text,
-                                    user.uid,
-                                    user.username,
-                                    user.photoUrl);
-                                setState(() {
-                                  _commentController.text = "";
-                                });
+                                performLoggedUserAction(
+                                    context: context,
+                                    action: () async {
+                                      await FirestoreMethods().postComment(
+                                          _post.postId,
+                                          _commentController.text,
+                                          user?.uid ?? '',
+                                          user?.username ?? '',
+                                          user?.photoUrl ?? '');
+                                      setState(() {
+                                        _commentController.text = "";
+                                      });
+                                    });
                               },
                               child: Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.send,
-                                        color: Colors.blueAccent, size: 12),
-                                    Container(width: 3),
-                                    Text(
-                                      'SEND',
-                                      style: TextStyle(
-                                        color: Colors.blueAccent,
-                                        letterSpacing: 0.5,
+                                padding: const EdgeInsets.only(
+                                    right: 8.0, top: 12, bottom: 12),
+                                child: SizedBox(
+                                  height: 36,
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.send,
+                                          color: Colors.blueAccent, size: 12),
+                                      Container(width: 3),
+                                      Text(
+                                        'SEND',
+                                        style: TextStyle(
+                                          color: Colors.blueAccent,
+                                          letterSpacing: 0.5,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),

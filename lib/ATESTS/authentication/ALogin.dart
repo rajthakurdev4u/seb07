@@ -37,13 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
         email: _emailController.text, password: _passwordController.text);
 
     if (res == "success") {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-            builder: (context) => const ResponsiveLayout(
-                  mobileScreenLayout: MobileScreenLayout(),
-                  webScreenLayout: WebScreenLayout(),
-                )),
-      );
+      goToHome(context);
     } else {
       showSnackBar(res, context);
     }
@@ -111,6 +105,29 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 24),
                     Flexible(child: Container(), flex: 2),
 
+                    InkWell(
+                      onTap: () {
+                        goToHome(context);
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.only(
+                              top: 8,
+                              bottom: 8,
+                              left: 8,
+                            ),
+                            child: const Text("Continue as a guest"),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Icon(Icons.arrow_forward),
+                          ),
+                        ],
+                      ),
+                    ),
                     //transitioning
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

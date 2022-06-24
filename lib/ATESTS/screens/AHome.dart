@@ -1,5 +1,6 @@
 import 'package:aft/ATESTS/models/APost.dart';
 import 'package:aft/ATESTS/models/AUser.dart';
+import 'package:aft/ATESTS/other/AUtils.dart';
 import 'package:aft/ATESTS/provider/AUserProvider.dart';
 import 'package:animated_toggle_switch/animated_toggle_switch.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -70,10 +71,15 @@ class _MyHomeScreenState extends State<MyHomeScreen> {
                     child:
                         Text('Add Post', style: TextStyle(color: Colors.black)),
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => AddPost()),
-                      );
+                      performLoggedUserAction(
+                          context: context,
+                          action: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const AddPost()),
+                            );
+                          });
                     },
                   ),
                 ),

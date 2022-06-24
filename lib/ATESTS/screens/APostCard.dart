@@ -105,12 +105,6 @@ class _PostCardTestState extends State<PostCardTest> {
       gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{},
     );
     final User? user = Provider.of<UserProvider>(context).getUser;
-    if (user == null) {
-      return const Center(
-          child: CircularProgressIndicator(
-        color: Colors.black,
-      ));
-    }
 
     print('_post.username: ${_post.username}');
     print(' _post.global == true: ${_post.global == 'true'}');
@@ -185,43 +179,47 @@ class _PostCardTestState extends State<PostCardTest> {
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.only(right: 4.0),
-                          child: Container(
-                            // color: Colors.brown,
-                            alignment: Alignment.centerRight,
-                            child: IconButton(
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => Dialog(
-                                    child: ListView(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 16,
-                                        ),
-                                        shrinkWrap: true,
-                                        children: [
-                                          'Delete',
-                                        ]
-                                            .map(
-                                              (e) => InkWell(
-                                                onTap: () async {
-                                                  FirestoreMethods()
-                                                      .deletePost(_post.postId);
-                                                  Navigator.of(context).pop();
-                                                },
-                                                child: Container(
-                                                  padding: const EdgeInsets
-                                                          .symmetric(
-                                                      vertical: 12,
-                                                      horizontal: 16),
-                                                  child: Text(e),
+                          child: Visibility(
+                            visible: _post.uid == user?.uid,
+                            child: Container(
+                              // color: Colors.brown,
+                              alignment: Alignment.centerRight,
+                              child: IconButton(
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => Dialog(
+                                      child: ListView(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 16,
+                                          ),
+                                          shrinkWrap: true,
+                                          children: [
+                                            'Delete',
+                                          ]
+                                              .map(
+                                                (e) => InkWell(
+                                                  onTap: () async {
+                                                    FirestoreMethods()
+                                                        .deletePost(
+                                                            _post.postId);
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  child: Container(
+                                                    padding: const EdgeInsets
+                                                            .symmetric(
+                                                        vertical: 12,
+                                                        horizontal: 16),
+                                                    child: Text(e),
+                                                  ),
                                                 ),
-                                              ),
-                                            )
-                                            .toList()),
-                                  ),
-                                );
-                              },
-                              icon: const Icon(Icons.more_vert),
+                                              )
+                                              .toList()),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.more_vert),
+                              ),
                             ),
                           ),
                         ),
@@ -489,22 +487,26 @@ class _PostCardTestState extends State<PostCardTest> {
                               width: 59,
                               // color: Colors.orange,
                               child: LikeAnimation(
-                                isAnimating: _post.plus.contains(user.uid),
+                                isAnimating: _post.plus.contains(user?.uid),
                                 child: IconButton(
                                   iconSize: 25,
-                                  onPressed: () async {
-                                    await FirestoreMethods().plusMessage(
-                                      _post.postId,
-                                      user.uid,
-                                      _post.plus,
-                                    );
+                                  onPressed: () {
+                                    performLoggedUserAction(
+                                        context: context,
+                                        action: () async {
+                                          await FirestoreMethods().plusMessage(
+                                            _post.postId,
+                                            user?.uid ?? '',
+                                            _post.plus,
+                                          );
+                                        });
                                   },
-                                  icon: _post.plus.contains(user.uid)
-                                      ? Icon(
+                                  icon: _post.plus.contains(user?.uid)
+                                      ? const Icon(
                                           Icons.add_circle,
                                           color: Colors.green,
                                         )
-                                      : Icon(
+                                      : const Icon(
                                           Icons.add_circle,
                                           color: Color.fromARGB(
                                               255, 206, 204, 204),
@@ -534,22 +536,26 @@ class _PostCardTestState extends State<PostCardTest> {
                             height: 60,
                             width: 59,
                             child: LikeAnimation(
-                              isAnimating: _post.minus.contains(user.uid),
+                              isAnimating: _post.minus.contains(user?.uid),
                               child: IconButton(
                                 iconSize: 25,
                                 onPressed: () async {
-                                  await FirestoreMethods().minusMessage(
-                                    _post.postId,
-                                    user.uid,
-                                    _post.minus,
-                                  );
+                                  performLoggedUserAction(
+                                      context: context,
+                                      action: () async {
+                                        await FirestoreMethods().minusMessage(
+                                          _post.postId,
+                                          user?.uid ?? '',
+                                          _post.minus,
+                                        );
+                                      });
                                 },
-                                icon: _post.minus.contains(user.uid)
-                                    ? Icon(
+                                icon: _post.minus.contains(user?.uid)
+                                    ? const Icon(
                                         Icons.do_not_disturb_on,
                                         color: Colors.red,
                                       )
-                                    : Icon(
+                                    : const Icon(
                                         Icons.do_not_disturb_on,
                                         color:
                                             Color.fromARGB(255, 206, 204, 204),
@@ -563,7 +569,7 @@ class _PostCardTestState extends State<PostCardTest> {
                               width: 59,
                               alignment: Alignment.center,
                               child: Text('${_post.minus.length}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.bold)),
                             ),
