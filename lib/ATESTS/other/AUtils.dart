@@ -33,15 +33,14 @@ void goToLogin(BuildContext context) {
   );
 }
 
-
 void goToHome(BuildContext context) {
   Navigator.of(context).pushAndRemoveUntil(
     MaterialPageRoute(
         builder: (context) => const ResponsiveLayout(
-          mobileScreenLayout: MobileScreenLayout(),
-          webScreenLayout: WebScreenLayout(),
-        )),
-        (route) => false,
+              mobileScreenLayout: MobileScreenLayout(),
+              webScreenLayout: WebScreenLayout(),
+            )),
+    (route) => false,
   );
 }
 
@@ -80,4 +79,19 @@ performLoggedUserAction({
           );
         });
   }
+}
+
+String trimCommentText({
+  required String text,
+}) {
+  String trimmedText = text;
+  // Removes all line breaks and end blank spaces
+  trimmedText = trimmedText.replaceAll('\n', ' ').trim();
+
+  // Removes all consecutive blank spaces
+  while (trimmedText.contains('  ')) {
+    trimmedText = trimmedText.replaceAll('  ', ' ');
+  }
+
+  return trimmedText;
 }

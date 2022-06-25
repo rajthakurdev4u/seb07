@@ -436,6 +436,8 @@ class _AddPostState extends State<AddPost> {
         });
       }
 
+      Navigator.pop(context);
+
       /*
       String res = await FirestoreMethods().uploadPost(
         uid,

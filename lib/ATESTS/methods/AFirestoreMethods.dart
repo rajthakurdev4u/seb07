@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:aft/ATESTS/other/AUtils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'AStorageMethods.dart';
 import 'package:uuid/uuid.dart';
@@ -252,6 +253,7 @@ class FirestoreMethods {
       String profilePic) async {
     try {
       if (text.isNotEmpty) {
+        String trimmedText = trimCommentText(text: text);
         String commentId = const Uuid().v1();
         _firestore
             .collection('posts')
@@ -262,7 +264,7 @@ class FirestoreMethods {
           'profilePic': profilePic,
           'name': name,
           'uid': uid,
-          'text': text,
+          'text': trimmedText,
           'commentId': commentId,
           'datePublished': DateTime.now(),
           'likes': [],
@@ -307,6 +309,8 @@ class FirestoreMethods {
       String uid, String name, String profilePic) async {
     try {
       if (text.isNotEmpty) {
+        String trimmedText = trimCommentText(text: text);
+
         String replyId = const Uuid().v1();
         _firestore
             .collection('posts')
@@ -319,7 +323,7 @@ class FirestoreMethods {
           'profilePic': profilePic,
           'name': name,
           'uid': uid,
-          'text': text,
+          'text': trimmedText,
           'replyId': replyId,
           'datePublished': DateTime.now(),
           'likes': [],
