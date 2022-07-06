@@ -1,34 +1,96 @@
 import 'dart:typed_data';
-import 'package:aft/ATESTS/other/AUtils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'AStorageMethods.dart';
 import 'package:uuid/uuid.dart';
-
 import '../models/APost.dart';
-import '../models/ApostjustText.dart' as justtextpopst;
-import '../models/Apostjustimage.dart' as justimage;
-import '../models/ApostjustUrl.dart' as justurl;
+import '../models/poll.dart';
+import '../other/AUtils.dart';
 
 class FirestoreMethods {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<String> uploadPoll(
+    String uid,
+    String username,
+    String profImage,
+    String country,
+    String global,
+    String pollTitle,
+    String option1,
+    String option2,
+    String option3,
+    String option4,
+    String option5,
+    String option6,
+    String option7,
+    String option8,
+    String option9,
+    String option10,
+  ) async {
+    String res = "some error occurred";
+    try {
+      String pollId = const Uuid().v1();
+
+      Poll poll = Poll(
+        pollId: pollId,
+        uid: uid,
+        username: username,
+        profImage: profImage,
+        country: country,
+        datePublished: DateTime.now(),
+        global: global,
+        pollTitle: pollTitle,
+        option1: option1,
+        option2: option2,
+        option3: option3,
+        option4: option4,
+        option5: option5,
+        option6: option6,
+        option7: option7,
+        option8: option8,
+        option9: option9,
+        option10: option10,
+        vote1: [],
+        vote2: [],
+        vote3: [],
+        vote4: [],
+        vote5: [],
+        vote6: [],
+        vote7: [],
+        vote8: [],
+        vote9: [],
+        vote10: [],
+        totalVotes: 0,
+      );
+
+      _firestore.collection('polls').doc(pollId).set(
+            poll.toJson(),
+          );
+      res = "success";
+    } catch (err) {
+      res = err.toString();
+    }
+    return res;
+  }
 
   //upload post
   Future<String> uploadPost(
     String uid,
     String username,
     String profImage,
+    String country,
     String global,
     String title,
     String body,
     String videoUrl,
-    Uint8List file,
+    // Uint8List file,
+    String photoUrl,
     int selected,
   ) async {
     String res = "some error occurred";
     try {
-      String photoUrl =
-          await StorageMethods().uploadImageToStorage('posts', file, true);
-
+      // String photoUrl =
+      //     await StorageMethods().uploadImageToStorage('posts', file, true);
+      String trimmedText = trimText(text: title);
       String postId = const Uuid().v1();
 
       Post post = Post(
@@ -36,9 +98,10 @@ class FirestoreMethods {
         uid: uid,
         username: username,
         profImage: profImage,
+        country: country,
         datePublished: DateTime.now(),
         global: global,
-        title: title,
+        title: trimmedText,
         body: body,
         videoUrl: videoUrl,
         postUrl: photoUrl,
@@ -46,6 +109,7 @@ class FirestoreMethods {
         plus: [],
         neutral: [],
         minus: [],
+        score: 0,
       );
 
       _firestore.collection('posts').doc(postId).set(
@@ -58,129 +122,49 @@ class FirestoreMethods {
     return res;
   }
 
-  Future<String> uploadPostJustUrl(
-    String uid,
-    String username,
-    String profImage,
-    String global,
-    String title,
-    String body,
-    String videoUrl,
-    int selected,
-  ) async {
-    String res = "some error occurred";
+  Future<void> scoreMessage(String postId, String uid, int score) async {
     try {
-      String postId = const Uuid().v1();
-
-      justurl.Post post = justurl.Post(
-        postId: postId,
-        uid: uid,
-        username: username,
-        profImage: profImage,
-        datePublished: DateTime.now(),
-        global: global,
-        title: title,
-        body: body,
-        videoUrl: videoUrl,
-        selected: selected,
-        plus: [],
-        neutral: [],
-        minus: [],
+      await _firestore.collection('posts').doc(postId).update(
+        {'score': score},
       );
-
-      _firestore.collection('posts').doc(postId).set(
-            post.toJson(),
-          );
-      res = "success";
-    } catch (err) {
-      res = err.toString();
+    } catch (e) {
+      print(
+        e.toString(),
+      );
     }
-    return res;
   }
 
-  Future<String> uploadPostjustImage(
-    String uid,
-    String username,
-    String profImage,
-    String global,
-    String title,
-    String body,
-    Uint8List file,
-    int selected,
-  ) async {
-    String res = "some error occurred";
+  Future<void> totalVotesPoll(String pollId, String uid, int totalVotes) async {
     try {
-      String photoUrl =
-          await StorageMethods().uploadImageToStorage('posts', file, true);
-
-      String postId = const Uuid().v1();
-
-      justimage.Post post = justimage.Post(
-        postId: postId,
-        uid: uid,
-        username: username,
-        profImage: profImage,
-        datePublished: DateTime.now(),
-        global: global,
-        title: title,
-        body: body,
-        postUrl: photoUrl,
-        selected: selected,
-        plus: [],
-        neutral: [],
-        minus: [],
+      await _firestore.collection('posts').doc(pollId).update(
+        {'totalVotes': totalVotes},
       );
-
-      _firestore.collection('posts').doc(postId).set(
-            post.toJson(),
-          );
-      res = "success";
-    } catch (err) {
-      res = err.toString();
+    } catch (e) {
+      print(
+        e.toString(),
+      );
     }
-    return res;
   }
 
-  Future<String> uploadPostjusttext(
-    String uid,
-    String username,
-    String profImage,
-    String global,
-    String title,
-    String body,
-    //String videoUrl,
-    // Uint8List? file,
-    int selected,
-  ) async {
-    String res = "some error occurred";
-    try {
-      String postId = const Uuid().v1();
-
-      justtextpopst.Post post = justtextpopst.Post(
-        postId: postId,
-        uid: uid,
-        username: username,
-        profImage: profImage,
-        datePublished: DateTime.now(),
-        global: global,
-        title: title,
-        body: body,
-        selected: selected,
-        plus: [],
-        neutral: [],
-        minus: [],
-      );
-
-      _firestore.collection('posts').doc(postId).set(
-            post.toJson(),
-          );
-      res = "success";
-    } catch (err) {
-      res = err.toString();
-    }
-    return res;
-  }
-
+  // Future<void> plusMessage(String postId, String uid, List plus) async {
+  //   try {
+  //     if (plus.contains(uid)) {
+  //       await _firestore.collection('posts').doc(postId).update({
+  //         'plus': FieldValue.arrayRemove([uid]),
+  //       });
+  //     } else {
+  //       await _firestore.collection('posts').doc(postId).update({
+  //         'plus': FieldValue.arrayUnion([uid]),
+  //         'neutral': FieldValue.arrayRemove([uid]),
+  //         'minus': FieldValue.arrayRemove([uid]),
+  //       });
+  //     }
+  //   } catch (e) {
+  //     print(
+  //       e.toString(),
+  //     );
+  //   }
+  // }
   Future<void> plusMessage(
     String postId,
     String uid,
@@ -195,6 +179,26 @@ class FirestoreMethods {
         await _firestore.collection('posts').doc(postId).update({
           'plus': FieldValue.arrayUnion([uid]),
           'neutral': FieldValue.arrayRemove([uid]),
+          'minus': FieldValue.arrayRemove([uid]),
+        });
+      }
+    } catch (e) {
+      print(
+        e.toString(),
+      );
+    }
+  }
+
+  Future<void> neutralMessage(String postId, String uid, List neutral) async {
+    try {
+      if (neutral.contains(uid)) {
+        await _firestore.collection('posts').doc(postId).update({
+          'neutral': FieldValue.arrayRemove([uid]),
+        });
+      } else {
+        await _firestore.collection('posts').doc(postId).update({
+          'neutral': FieldValue.arrayUnion([uid]),
+          'plus': FieldValue.arrayRemove([uid]),
           'minus': FieldValue.arrayRemove([uid]),
         });
       }
@@ -229,17 +233,17 @@ class FirestoreMethods {
     }
   }
 
-  // Future<void> neutralMessage(String postId, String uid, List neutral) async {
+  // Future<void> minusMessage(String postId, String uid, List minus) async {
   //   try {
-  //     if (neutral.contains(uid)) {
+  //     if (minus.contains(uid)) {
   //       await _firestore.collection('posts').doc(postId).update({
-  //         'neutral': FieldValue.arrayRemove([uid]),
+  //         'minus': FieldValue.arrayRemove([uid]),
   //       });
   //     } else {
   //       await _firestore.collection('posts').doc(postId).update({
-  //         'neutral': FieldValue.arrayUnion([uid]),
+  //         'minus': FieldValue.arrayUnion([uid]),
   //         'plus': FieldValue.arrayRemove([uid]),
-  //         'minus': FieldValue.arrayRemove([uid]),
+  //         'neutral': FieldValue.arrayRemove([uid]),
   //       });
   //     }
   //   } catch (e) {
@@ -253,7 +257,7 @@ class FirestoreMethods {
       String profilePic) async {
     try {
       if (text.isNotEmpty) {
-        String trimmedText = trimCommentText(text: text);
+        String trimmedText = trimText(text: text);
         String commentId = const Uuid().v1();
         _firestore
             .collection('posts')
@@ -282,35 +286,11 @@ class FirestoreMethods {
     }
   }
 
-  //deleting post
-  Future<void> deletePost(String postId) async {
-    try {
-      await _firestore.collection('posts').doc(postId).delete();
-    } catch (err) {
-      print(err.toString());
-    }
-  }
-
-  //deleting comment
-  Future<void> deleteComment(String postId, String commentId) async {
-    try {
-      await _firestore
-          .collection('posts')
-          .doc(postId)
-          .collection('comments')
-          .doc(commentId)
-          .delete();
-    } catch (err) {
-      print(err.toString());
-    }
-  }
-
   Future<void> postReply(String postId, String commentId, String text,
       String uid, String name, String profilePic) async {
     try {
       if (text.isNotEmpty) {
-        String trimmedText = trimCommentText(text: text);
-
+        String trimmedText = trimText(text: text);
         String replyId = const Uuid().v1();
         _firestore
             .collection('posts')
@@ -341,7 +321,89 @@ class FirestoreMethods {
     }
   }
 
+  // Future<void> likeComment(
+  //     String postId, String commentId, String uid, List likes) async {
+  //   try {
+  //     if (likes.contains(uid)) {
+  //       await _firestore
+  //           .collection('posts')
+  //           .doc(postId)
+  //           .collection('comments')
+  //           .doc(commentId)
+  //           .update({
+  //         'likes': FieldValue.arrayRemove([uid]),
+  //       });
+  //     } else {
+  //       await _firestore
+  //           .collection('posts')
+  //           .doc(postId)
+  //           .collection('comments')
+  //           .doc(commentId)
+  //           .update({
+  //         'likes': FieldValue.arrayUnion([uid]),
+  //         'dislikes': FieldValue.arrayRemove([uid]),
+  //       });
+  //     }
+  //   } catch (e) {
+  //     print(
+  //       e.toString(),
+  //     );
+  //   }
+  // }
+
+  // Future<void> dislikeComment(
+  //     String postId, String commentId, String uid, List dislikes) async {
+  //   try {
+  //     if (dislikes.contains(uid)) {
+  //       await _firestore
+  //           .collection('posts')
+  //           .doc(postId)
+  //           .collection('comments')
+  //           .doc(commentId)
+  //           .update({
+  //         'dislikes': FieldValue.arrayRemove([uid]),
+  //       });
+  //     } else {
+  //       await _firestore
+  //           .collection('posts')
+  //           .doc(postId)
+  //           .collection('comments')
+  //           .doc(commentId)
+  //           .update({
+  //         'dislikes': FieldValue.arrayUnion([uid]),
+  //         'likes': FieldValue.arrayRemove([uid]),
+  //       });
+  //     }
+  //   } catch (e) {
+  //     print(
+  //       e.toString(),
+  //     );
+  //   }
+  // }
+
+  //deleting post
+  Future<void> deletePost(String postId) async {
+    try {
+      await _firestore.collection('posts').doc(postId).delete();
+    } catch (err) {
+      print(err.toString());
+    }
+  }
+
   //deleting comment
+  Future<void> deleteComment(String postId, String commentId) async {
+    try {
+      await _firestore
+          .collection('posts')
+          .doc(postId)
+          .collection('comments')
+          .doc(commentId)
+          .delete();
+    } catch (err) {
+      print(err.toString());
+    }
+  }
+
   Future<void> deleteReply(
     String postId,
     String commentId,
@@ -389,13 +451,17 @@ class FirestoreMethods {
         if (dislikes.contains(uid)) {
           updateMap['dislikeCount'] = FieldValue.increment(-1);
         }
-
         await _firestore
             .collection('posts')
             .doc(postId)
             .collection('comments')
             .doc(commentId)
             .update(updateMap);
+        //     .update({
+        //   'likes': FieldValue.arrayUnion([uid]),
+
+        //   'dislikes': FieldValue.arrayRemove([uid]),
+        // });
       }
     } catch (e) {
       print(
@@ -404,13 +470,8 @@ class FirestoreMethods {
     }
   }
 
-  Future<void> dislikeComment(
-    String postId,
-    String commentId,
-    String uid,
-    List likes,
-    List dislikes,
-  ) async {
+  Future<void> dislikeComment(String postId, String commentId, String uid,
+      List likes, List dislikes) async {
     try {
       if (dislikes.contains(uid)) {
         await _firestore
@@ -439,6 +500,10 @@ class FirestoreMethods {
             .collection('comments')
             .doc(commentId)
             .update(updateMap);
+        //     .update({
+        //   'dislikes': FieldValue.arrayUnion([uid]),
+        //   'likes': FieldValue.arrayRemove([uid]),
+        // });
       }
     } catch (e) {
       print(
@@ -478,7 +543,6 @@ class FirestoreMethods {
         if (dislikes.contains(uid)) {
           updateMap['dislikeCount'] = FieldValue.increment(-1);
         }
-
         await _firestore
             .collection('posts')
             .doc(postId)
@@ -487,6 +551,10 @@ class FirestoreMethods {
             .collection('replies')
             .doc(replyId)
             .update(updateMap);
+        //     .update({
+        //   'likes': FieldValue.arrayUnion([uid]),
+        //   'dislikes': FieldValue.arrayRemove([uid]),
+        // });
       }
     } catch (e) {
       print(
@@ -526,7 +594,6 @@ class FirestoreMethods {
         if (likes.contains(uid)) {
           updateMap['likeCount'] = FieldValue.increment(-1);
         }
-
         await _firestore
             .collection('posts')
             .doc(postId)
@@ -535,6 +602,10 @@ class FirestoreMethods {
             .collection('replies')
             .doc(replyId)
             .update(updateMap);
+        //     .update({
+        //   'dislikes': FieldValue.arrayUnion([uid]),
+        //   'likes': FieldValue.arrayRemove([uid]),
+        // });
       }
     } catch (e) {
       print(
