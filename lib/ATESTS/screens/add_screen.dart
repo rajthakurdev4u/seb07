@@ -72,6 +72,8 @@ class _AddPostState extends State<AddPost> {
   late final KeyboardVisibilityController _keyboardVisibilityController;
   late StreamSubscription<bool> keyboardSubscription;
 
+  final int _optionTextfieldMaxLength = 50;
+
   @override
   void initState() {
     super.initState();
@@ -1423,123 +1425,136 @@ class _AddPostState extends State<AddPost> {
                                                 padding: const EdgeInsets.only(
                                                   right: 10,
                                                   left: 10,
+                                                  bottom: 10,
                                                 ),
-                                                child: Container(
-                                                  // height: 50,
-                                                  // decoration: BoxDecoration(
-                                                  //   border: Border.all(
-                                                  //       width: 1,
-                                                  //       color: Color.fromARGB(
-                                                  //           255, 102, 102, 102)),
-                                                  //   borderRadius:
-                                                  //       BorderRadius.circular(10),
-                                                  // ),
-                                                  child: TextField(
-                                                    maxLength: 50,
-                                                    //controller: _titleController,
-                                                    onTap: () {
-                                                      print(i);
-                                                    },
-                                                    controller: _cont![index],
-                                                    decoration: InputDecoration(
-                                                      // counterText: '',
-                                                      // counterStyle: ,
-                                                      labelText: index == 0 ||
-                                                              index == 1
-                                                          ? "Option #$ic"
-                                                          : "Option #$ic (optional)",
-                                                      labelStyle: TextStyle(
-                                                        fontStyle:
-                                                            FontStyle.italic,
-                                                        fontSize: 15,
-                                                        color: Colors.grey,
-                                                      ),
-                                                      suffixIcon: i == 2
-                                                          ? Icon(Icons.cancel,
-                                                              color: Colors
-                                                                  .transparent)
-                                                          : IconButton(
-                                                              onPressed: () {
-                                                                print(index);
-                                                                print(i);
+                                                child: Stack(
+                                                  children: [
+                                                    TextField(
+                                                      maxLength: _optionTextfieldMaxLength,
+                                                      onChanged: (val) {
+                                                        setState(() {});
+                                                      },
+                                                      onTap: () {
+                                                        print(i);
+                                                      },
+                                                      controller: _cont![index],
+                                                      decoration:
+                                                          InputDecoration(
+                                                        counter: Container(),
+                                                        labelText: index == 0 ||
+                                                                index == 1
+                                                            ? "Option #$ic"
+                                                            : "Option #$ic (optional)",
+                                                        labelStyle:
+                                                            const TextStyle(
+                                                          fontStyle:
+                                                              FontStyle.italic,
+                                                          fontSize: 15,
+                                                          color: Colors.grey,
+                                                        ),
+                                                        suffixIcon: i == 2
+                                                            ? Icon(Icons.cancel,
+                                                                color: Colors
+                                                                    .transparent)
+                                                            : IconButton(
+                                                                onPressed: () {
+                                                                  print(index);
+                                                                  print(i);
 
-                                                                if (i > 2) {
-                                                                  setState(() {
-                                                                    i = i - 1;
-                                                                    print(i);
+                                                                  if (i > 2) {
+                                                                    setState(
+                                                                        () {
+                                                                      i = i - 1;
+                                                                      print(i);
 
-                                                                    _cont![index]
-                                                                        .clear();
-                                                                  });
+                                                                      _cont![index]
+                                                                          .clear();
+                                                                    });
 
-                                                                  if (index !=
-                                                                      i) {
-                                                                    print(
-                                                                        'abc');
-                                                                    print(_cont![
-                                                                            i]
-                                                                        .text);
-
-                                                                    if (_cont![
-                                                                            i - 1]
-                                                                        .text
-                                                                        .isEmpty) {
-                                                                      _cont![i -
-                                                                              1]
-                                                                          .text = _cont![
+                                                                    if (index !=
+                                                                        i) {
+                                                                      print(
+                                                                          'abc');
+                                                                      print(_cont![
                                                                               i]
-                                                                          .text;
-                                                                    }
+                                                                          .text);
 
-                                                                    print(_cont![
-                                                                            i - 1]
-                                                                        .text);
-                                                                    _cont![i]
-                                                                        .clear();
+                                                                      if (_cont![i -
+                                                                              1]
+                                                                          .text
+                                                                          .isEmpty) {
+                                                                        _cont![i -
+                                                                                1]
+                                                                            .text = _cont![
+                                                                                i]
+                                                                            .text;
+                                                                      }
+
+                                                                      print(_cont![i -
+                                                                              1]
+                                                                          .text);
+                                                                      _cont![i]
+                                                                          .clear();
+                                                                    }
                                                                   }
-                                                                }
-                                                              },
-                                                              icon: Icon(
-                                                                Icons.delete,
-                                                                size: 20,
-                                                                color:
-                                                                    Colors.grey,
+                                                                },
+                                                                icon: Icon(
+                                                                  Icons.delete,
+                                                                  size: 20,
+                                                                  color: Colors
+                                                                      .grey,
+                                                                ),
                                                               ),
-                                                            ),
-                                                      // hintText: "Option #$ic",
-                                                      contentPadding:
-                                                          EdgeInsets.only(
-                                                              left: 10),
-                                                      enabledBorder:
-                                                          OutlineInputBorder(
-                                                        borderSide:
-                                                            const BorderSide(
-                                                                color:
-                                                                    Colors.grey,
-                                                                width: 1.5),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10.0),
+                                                        // hintText: "Option #$ic",
+                                                        contentPadding:
+                                                            EdgeInsets.only(
+                                                                left: 10),
+                                                        enabledBorder:
+                                                            OutlineInputBorder(
+                                                          borderSide:
+                                                              const BorderSide(
+                                                                  color: Colors
+                                                                      .grey,
+                                                                  width: 1.5),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      10.0),
+                                                        ),
+                                                        focusedBorder:
+                                                            OutlineInputBorder(
+                                                          borderSide: BorderSide(
+                                                              color: Colors
+                                                                  .blueAccent,
+                                                              width: 2.0),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(10),
+                                                        ),
+                                                        border:
+                                                            InputBorder.none,
+
+                                                        // fillColor: Colors.white,
+                                                        // filled: true,
                                                       ),
-                                                      focusedBorder:
-                                                          OutlineInputBorder(
-                                                        borderSide: BorderSide(
-                                                            color: Colors
-                                                                .blueAccent,
-                                                            width: 2.0),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10),
+                                                      style: TextStyle(
+                                                        fontSize: 16,
                                                       ),
-                                                      border: InputBorder.none,
-                                                      // fillColor: Colors.white,
-                                                      // filled: true,
+                                                      maxLines: 1,
                                                     ),
-                                                    style: TextStyle(
-                                                      fontSize: 16,
+                                                    Positioned(
+                                                      bottom: 12,
+                                                      right: 6,
+                                                      child: Text(
+                                                        '${_cont![index].text.length}/$_optionTextfieldMaxLength',
+                                                        style: const TextStyle(
+                                                          // fontStyle: FontStyle.italic,
+                                                          fontSize: 12,
+                                                          color: Colors.grey,
+                                                        ),
+                                                      ),
                                                     ),
-                                                    maxLines: 1,
-                                                  ),
+                                                  ],
                                                 ),
                                               );
                                             }),

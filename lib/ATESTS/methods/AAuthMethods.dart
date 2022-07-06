@@ -101,7 +101,9 @@ class AuthMethods {
     try {
       if (email.isNotEmpty && password.isNotEmpty) {
         await _auth.signInWithEmailAndPassword(
-            email: email, password: password);
+          email: email,
+          password: password,
+        );
         res = "success";
       } else if (email.isEmpty && password.isEmpty) {
         res = "Input fields cannot be blank.";
