@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../methods/AAuthMethods.dart';
@@ -54,14 +55,57 @@ class _SignupScreenState extends State<SignupScreen> {
     });
   }
 
+  // Validates "username" field
+  Future<String?> usernameValidator({required String? username}) async {
+    // Validates username complexity
+    bool isUsernameComplex(String? text) {
+      final String _text = (text ?? "");
+      // String? p = r"^(?=(.*[0-9]))(?=(.*[A-Za-z]))";
+      String? p = r"^(?=(.*[ @$!%*?&=_+/#^.~`]))";
+      RegExp regExp = RegExp(p);
+      return regExp.hasMatch(_text);
+    }
+
+    final String _text = (username ?? "");
+
+    // Complexity check
+    if (isUsernameComplex(_text)) {
+      return "Username should only be letters and numbers";
+    }
+    // Length check
+    else if (_text.length < 3 || _text.length > 16) {
+      return "Username should be 3-16 characters long";
+    }
+
+    // Availability check
+    var val = await FirebaseFirestore.instance
+        .collection('users')
+        .where('username', isEqualTo: _text)
+        .get();
+    if (val.docs.isNotEmpty) {
+      return "This username is not available";
+    }
+
+    return null;
+  }
+
   void signUpUser() async {
+    // Validates username
+    String? userNameValid =
+        await usernameValidator(username: _usernameController.text);
+    if (userNameValid != null) {
+      showSnackBar(userNameValid, context);
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
+
     String res = await AuthMethods().signUpUser(
-      email: _emailController.text,
+      username: _usernameController.text.trim(),
+      email: _emailController.text.trim(),
       password: _passwordController.text,
-      username: _usernameController.text,
       // bio: _bioController.text,
       profilePicFile: _image,
       country: country,
@@ -73,6 +117,7 @@ class _SignupScreenState extends State<SignupScreen> {
         _isLoading = false;
       });
       // });
+      print('INSIDE res != "success"');
       showSnackBar(res, context);
     } else {
       goToHome(context);
@@ -105,7 +150,6 @@ class _SignupScreenState extends State<SignupScreen> {
                     reverse: true,
                     // crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Flexible(child: Container(), flex: 1),
                       Stack(
                         children: [
                           _image != null
@@ -184,7 +228,6 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      Flexible(child: Container(), flex: 2),
                       InkWell(
                         onTap: () {
                           goToHome(context);
