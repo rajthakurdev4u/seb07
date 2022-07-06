@@ -22,6 +22,7 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
   // final TextEditingController _bioController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _countryController = TextEditingController();
@@ -31,6 +32,7 @@ class _SignupScreenState extends State<SignupScreen> {
   var country = 'us';
   String oneValue = '';
   var countryIndex;
+
   @override
   void initState() {
     super.initState();
@@ -61,7 +63,7 @@ class _SignupScreenState extends State<SignupScreen> {
       password: _passwordController.text,
       username: _usernameController.text,
       // bio: _bioController.text,
-      file: _image!,
+      profilePicFile: _image,
       country: country,
     );
 
@@ -109,12 +111,20 @@ class _SignupScreenState extends State<SignupScreen> {
                           _image != null
                               ? CircleAvatar(
                                   radius: 64,
+                                  backgroundColor: Colors.white,
                                   backgroundImage: MemoryImage(_image!),
                                 )
-                              : const CircleAvatar(
+                              : CircleAvatar(
                                   radius: 64,
-                                  backgroundImage: NetworkImage(
-                                      'https://images.nightcafe.studio//assets/profile.png?tr=w-1600,c-at_max'),
+                                  backgroundColor: Colors.grey.shade200,
+                                  child: const Icon(
+                                    Icons.person,
+                                    color: Colors.grey,
+                                    size: 64,
+                                  ),
+                                  // backgroundImage: NetworkImage(
+                                  //   'https://images.nightcafe.studio//assets/profile.png?tr=w-1600,c-at_max',
+                                  // ),
                                 ),
                           Positioned(
                             bottom: -10,
