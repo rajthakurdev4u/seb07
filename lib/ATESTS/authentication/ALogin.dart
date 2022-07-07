@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../methods/AAuthMethods.dart';
@@ -38,8 +39,24 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _isLoading = true;
     });
+
+    String email = _emailController.text;
+
+    // Login with username
+    if (!email.contains('@')) {
+      var user = await FirebaseFirestore.instance
+          .collection('users')
+          .where('username', isEqualTo: email)
+          .get();
+      if (user.docs.isNotEmpty) {
+        email = user.docs.first.data()['email'];
+      }
+    }
+
     String res = await AuthMethods().loginUser(
-        email: _emailController.text, password: _passwordController.text);
+      email: email,
+      password: _passwordController.text,
+    );
 
     if (res == "success") {
       goToHome(context);

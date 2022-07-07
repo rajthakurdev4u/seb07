@@ -123,8 +123,8 @@ class AuthMethods {
             "This account has been disabled. If you believe this was a mistake, please contact us at: email@gmail.com";
       } else if (e.code == 'user-not-found') {
         res = "No registered user found under this email address.";
-      } else if (e.code == 'invalid-email') {
-        res = "No registered user found under this email address.";
+      } else if (e.code == 'invalid-email' && !email.contains('@')) {
+        res = "No registered user found under this username.";
       } else if (e.code == 'wrong-password') {
         res = "Wrong password!";
       }
