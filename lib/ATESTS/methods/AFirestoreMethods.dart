@@ -60,11 +60,41 @@ class FirestoreMethods {
         vote9: [],
         vote10: [],
         totalVotes: 0,
+        allVotesUIDs: []
       );
 
       _firestore.collection('polls').doc(pollId).set(
             poll.toJson(),
           );
+      res = "success";
+    } catch (err) {
+      res = err.toString();
+    }
+    return res;
+  }
+
+  Future<String> poll({
+    required Poll poll,
+    required String uid,
+    required int optionIndex,
+  }) async {
+    String res = "some error occurred";
+
+    try {
+      String pollId = poll.pollId;
+
+      print('_poll : ${poll.toJson()}');
+      print('pollId : $pollId');
+
+
+      _firestore.collection('polls').doc(pollId).update({
+        'totalVotes': FieldValue.increment(1),
+        'vote$optionIndex': FieldValue.arrayUnion([uid]),
+        'allVotesUIDs':  FieldValue.arrayUnion([uid]),
+      });
+
+      print('POLL SUCCESSFULL');
+
       res = "success";
     } catch (err) {
       res = err.toString();

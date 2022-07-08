@@ -5,7 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_polls/flutter_polls.dart';
 import 'package:intl/intl.dart';
+
 // import 'package:polls/polls.dart';
 import 'package:provider/provider.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
@@ -34,6 +36,10 @@ class _PollCardState extends State<PollCard> {
   int commentLen = 0;
   String placement = '';
   var testt = 21100;
+
+  final TextStyle _pollOptionTextStyle = const TextStyle(
+    fontSize: 16,
+  );
 
   @override
   void initState() {
@@ -160,53 +166,153 @@ class _PollCardState extends State<PollCard> {
                 ),
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                InkWell(
-                  onTap: () {},
-                  child: Container(
-                    alignment: Alignment.center,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text('${_poll.pollTitle}'),
-                        Container(height: 4),
-                        Text('${_poll.option1}'),
-                        Text('${_poll.option2}'),
-                        _poll.option3 == ''
-                            ? Container()
-                            : Text('${_poll.option3}'),
-                        _poll.option4 == ''
-                            ? Container()
-                            : Text('${_poll.option4}'),
-                        _poll.option5 == ''
-                            ? Container()
-                            : Text('${_poll.option5}'),
-                        _poll.option6 == ''
-                            ? Container()
-                            : Text('${_poll.option6}'),
-                        _poll.option7 == ''
-                            ? Container()
-                            : Text('${_poll.option7}'),
-                        _poll.option8 == ''
-                            ? Container()
-                            : Text('${_poll.option8}'),
-                        _poll.option9 == ''
-                            ? Container()
-                            : Text('${_poll.option9}'),
-                        _poll.option10 == ''
-                            ? Container()
-                            : Text('${_poll.option10}'),
-                      ],
-                    ),
+            const SizedBox(height: 8),
+            FlutterPolls(
+              pollId: _poll.pollId,
+              hasVoted: _poll.allVotesUIDs.contains(user?.uid),
+              userVotedOptionId: _getUserPollOptionId(user?.uid ?? ''),
+              onVoted: (PollOption pollOption, int newTotalVotes) async {
+                await FirestoreMethods().poll(
+                  poll: _poll,
+                  uid: user?.uid ?? '',
+                  optionIndex: pollOption.id!,
+                );
+                print('newTotalVotes: ${newTotalVotes}');
+                print('Voted: ${pollOption.id}');
+              },
+              leadingVotedProgessColor: Colors.blue.shade200,
+              pollOptionsSplashColor: Colors.white,
+              votedProgressColor: Colors.blueGrey.withOpacity(0.3),
+              votedBackgroundColor: Colors.grey.withOpacity(0.2),
+              votedCheckmark: const Icon(
+                Icons.check_circle_outline,
+                color: Colors.black,
+                size: 18,
+              ),
+              pollTitle: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  _poll.pollTitle,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
+              ),
+              pollOptions: [
+                PollOption(
+                  id: 1,
+                  title: Text(
+                    _poll.option1,
+                    style: _pollOptionTextStyle,
+                  ),
+                  votes: _poll.vote1.length,
+                ),
+                PollOption(
+                  id: 2,
+                  title: Text(
+                    _poll.option2,
+                    style: _pollOptionTextStyle,
+                  ),
+                  votes: _poll.vote2.length,
+                ),
+                if (_poll.option3 != '')
+                  PollOption(
+                    id: 3,
+                    title: Text(
+                      _poll.option3,
+                      style: _pollOptionTextStyle,
+                    ),
+                    votes: _poll.vote3.length,
+                  ),
               ],
+              metaWidget: Row(
+                children: const [
+                  SizedBox(width: 6),
+                  Text(
+                    '•',
+                    style: TextStyle(
+                      fontSize: 20,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 6,
+                  ),
+                  Text(
+                    '2 weeks left',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
+            const SizedBox(height: 8),
           ],
         ),
       ),
     );
+  }
+
+  int? _getUserPollOptionId(String uid) {
+    print("uid: $uid");
+    int? optionId;
+    for (int i = 1; i <= 10; i++) {
+      switch (i) {
+        case 1:
+          if (_poll.vote1.contains(uid)) {
+            optionId = i;
+          }
+          break;
+        case 2:
+          if (_poll.vote2.contains(uid)) {
+            optionId = i;
+          }
+          break;
+        case 3:
+          if (_poll.vote3.contains(uid)) {
+            optionId = i;
+          }
+          break;
+        case 4:
+          if (_poll.vote4.contains(uid)) {
+            optionId = i;
+          }
+          break;
+        case 5:
+          if (_poll.vote5.contains(uid)) {
+            optionId = i;
+          }
+          break;
+        case 6:
+          if (_poll.vote6.contains(uid)) {
+            optionId = i;
+          }
+          break;
+        case 7:
+          if (_poll.vote7.contains(uid)) {
+            optionId = i;
+          }
+          break;
+        case 8:
+          if (_poll.vote8.contains(uid)) {
+            optionId = i;
+          }
+          break;
+        case 9:
+          if (_poll.vote9.contains(uid)) {
+            optionId = i;
+          }
+          break;
+        case 10:
+          if (_poll.vote10.contains(uid)) {
+            optionId = i;
+          }
+          break;
+      }
+    }
+    print("POLLED optionId: $optionId");
+    return optionId;
   }
 }

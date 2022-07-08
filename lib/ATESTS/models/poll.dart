@@ -33,6 +33,7 @@ class Poll {
   final List<String> vote9;
   final List<String> vote10;
   final int totalVotes;
+  final List<String> allVotesUIDs;
 
   final datePublished;
   dynamic comments;
@@ -67,10 +68,11 @@ class Poll {
     required this.vote9,
     required this.vote10,
     required this.totalVotes,
+    required this.allVotesUIDs,
   });
 
   Map<String, dynamic> toJson() => {
-        "postId": pollId,
+        "pollId": pollId,
         "uid": uid,
         "username": username,
         "profImage": profImage,
@@ -99,6 +101,7 @@ class Poll {
         "vote9": vote9,
         "vote10": vote10,
         "totalVotes": totalVotes,
+        "allVotesUIDs": allVotesUIDs,
       };
 
   static Poll fromSnap(DocumentSnapshot snap) {
@@ -134,6 +137,7 @@ class Poll {
       vote10: (snapshot['vote10'] ?? []).cast<String>(),
       datePublished: snapshot['datePublished'],
       totalVotes: snapshot['totalVotes'],
+      allVotesUIDs: (snapshot['allVotesUIDs'] ?? []).cast<String>(),
     );
   }
 }

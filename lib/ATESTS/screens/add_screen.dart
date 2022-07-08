@@ -1549,7 +1549,7 @@ class _AddPostState extends State<AddPost> {
                                                         '${_cont![index].text.length}/$_optionTextfieldMaxLength',
                                                         style: const TextStyle(
                                                           // fontStyle: FontStyle.italic,
-                                                          fontSize: 12,
+                                                          fontSize: 10,
                                                           color: Colors.grey,
                                                         ),
                                                       ),
