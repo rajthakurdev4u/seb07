@@ -339,12 +339,16 @@ class _AddPostState extends State<AddPost> {
                 child: const Text('Open Camera',
                     style: TextStyle(letterSpacing: 0.2, fontSize: 15)),
                 onPressed: () async {
-                  Uint8List file = await pickImage(
-                    ImageSource.camera,
-                  );
-                  setState(() {
-                    _file = file;
-                  });
+                  Uint8List? file = await openCamera(context: context);
+                  // Uint8List file = await pickImage(
+                  //   ImageSource.camera,
+                  // );
+                  print(file);
+                  if (file != null) {
+                    setState(() {
+                      _file = file;
+                    });
+                  }
                   Navigator.of(context).pop();
                 },
               ),
@@ -353,13 +357,15 @@ class _AddPostState extends State<AddPost> {
                 child: const Text('Choose from gallery',
                     style: TextStyle(letterSpacing: 0.2, fontSize: 15)),
                 onPressed: () async {
+                  Navigator.of(context).pop();
+
                   Uint8List file = await pickImage(
                     ImageSource.gallery,
                   );
                   setState(() {
                     _file = file;
                   });
-                  Navigator.of(context).pop();
+
                 },
               ),
               SimpleDialogOption(
@@ -1430,7 +1436,8 @@ class _AddPostState extends State<AddPost> {
                                                 child: Stack(
                                                   children: [
                                                     TextField(
-                                                      maxLength: _optionTextfieldMaxLength,
+                                                      maxLength:
+                                                          _optionTextfieldMaxLength,
                                                       onChanged: (val) {
                                                         setState(() {});
                                                       },

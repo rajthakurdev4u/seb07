@@ -1,3 +1,7 @@
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +19,7 @@ import '../responsive/AResponsiveLayout.dart';
 import '../responsive/AWebScreenLayout.dart';
 import 'AReAuthenticationDialog.dart';
 import 'ATextField.dart';
+import 'camera/components/camera_screen.dart';
 
 pickImage(ImageSource source) async {
   final ImagePicker _imagePicker = ImagePicker();
@@ -106,6 +111,52 @@ Future<String?> usernameValidator({required String? username}) async {
   }
 
   return null;
+}
+
+// Returns screen size
+Size getScreenSize({required BuildContext context}) {
+  return MediaQuery.of(context).size;
+}
+
+Future<Uint8List?> openCamera({
+  required BuildContext context,
+}) async {
+  Uint8List? photo;
+  try {
+    final cameras = await availableCameras();
+    print('cameras.length: ${cameras.length}');
+    final firstCamera = cameras.first;
+    CameraDescription? secondaryCamera;
+    if (cameras.length > 1) {
+      secondaryCamera = cameras[1];
+    }
+
+    List<File>? selectedImages = await Navigator.of(
+      context,
+      rootNavigator: true,
+    ).push<List<File>>(CupertinoPageRoute(builder: (BuildContext context) {
+      return CameraScreen(
+        camera: firstCamera,
+        secondaryCamera: secondaryCamera,
+      );
+    }));
+
+    if (selectedImages?.isNotEmpty ?? false) {
+      print(selectedImages?.first);
+      photo = selectedImages?.first.readAsBytesSync();
+      // Navigator.pop(context, selectedImages?.first.readAsBytesSync());
+    }
+  } catch (e) {
+    // showAlert(
+    //   context: context,
+    //   titleText: Localization.of(context).trans(LocalizationValues.error),
+    //   message: '$e',
+    //   actionCallbacks: {
+    //     Localization.of(context).trans(LocalizationValues.ok): () {}
+    //   },
+    // );
+  }
+  return photo;
 }
 
 // Checks whether user is logged in

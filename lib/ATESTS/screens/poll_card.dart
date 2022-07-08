@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:aft/ATESTS/other/AUtils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -172,11 +173,15 @@ class _PollCardState extends State<PollCard> {
               hasVoted: _poll.allVotesUIDs.contains(user?.uid),
               userVotedOptionId: _getUserPollOptionId(user?.uid ?? ''),
               onVoted: (PollOption pollOption, int newTotalVotes) async {
-                await FirestoreMethods().poll(
-                  poll: _poll,
-                  uid: user?.uid ?? '',
-                  optionIndex: pollOption.id!,
-                );
+                performLoggedUserAction(
+                    context: context,
+                    action: () async {
+                      await FirestoreMethods().poll(
+                        poll: _poll,
+                        uid: user?.uid ?? '',
+                        optionIndex: pollOption.id!,
+                      );
+                    });
                 print('newTotalVotes: ${newTotalVotes}');
                 print('Voted: ${pollOption.id}');
               },
