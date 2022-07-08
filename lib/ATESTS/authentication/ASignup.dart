@@ -55,39 +55,6 @@ class _SignupScreenState extends State<SignupScreen> {
     });
   }
 
-  // Validates "username" field
-  Future<String?> usernameValidator({required String? username}) async {
-    // Validates username complexity
-    bool isUsernameComplex(String? text) {
-      final String _text = (text ?? "");
-      // String? p = r"^(?=(.*[0-9]))(?=(.*[A-Za-z]))";
-      String? p = r"^(?=(.*[ @$!%*?&=_+/#^.~`]))";
-      RegExp regExp = RegExp(p);
-      return regExp.hasMatch(_text);
-    }
-
-    final String _text = (username ?? "");
-
-    // Complexity check
-    if (isUsernameComplex(_text)) {
-      return "Username should only be letters and numbers";
-    }
-    // Length check
-    else if (_text.length < 3 || _text.length > 16) {
-      return "Username should be 3-16 characters long";
-    }
-
-    // Availability check
-    var val = await FirebaseFirestore.instance
-        .collection('users')
-        .where('username', isEqualTo: _text)
-        .get();
-    if (val.docs.isNotEmpty) {
-      return "This username is not available";
-    }
-
-    return null;
-  }
 
   void signUpUser() async {
     // Validates username

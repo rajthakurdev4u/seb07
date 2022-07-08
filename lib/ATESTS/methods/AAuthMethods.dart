@@ -134,6 +134,42 @@ class AuthMethods {
     return res;
   }
 
+  Future<void> changeUsername({
+    required String username,
+  }) async {
+    try {
+      User currentUser = _auth.currentUser!;
+      await _firestore.collection('users').doc(currentUser.uid).update(
+        {'username': username},
+      );
+    } catch (err) {}
+  }
+
+  Future<String> changeEmail({
+    required String email,
+  }) async {
+    String res = "Some error ocurred";
+    try {
+      User currentUser = _auth.currentUser!;
+      await currentUser.updateEmail(email);
+      await _firestore.collection('users').doc(currentUser.uid).update(
+        {'email': email},
+      );
+      res = "success";
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'invalid-email') {
+        res = "Please enter a valid email address.";
+      } else if (e.code == 'email-already-in-use') {
+        res = "This email is already in use.";
+      }
+    } catch (e) {
+      print(
+        e.toString(),
+      );
+    }
+    return res;
+  }
+
   Future<void> signOut() async {
     await _auth.signOut();
   }

@@ -150,7 +150,6 @@ class _MyHomeScreenState extends State<MyHomeScreen> {
     }
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Color.fromARGB(255, 236, 234, 234),
         body: NestedScrollView(
           floatHeaderSlivers: true,
           headerSliverBuilder: (context, innerBoxIsScrolled) => [

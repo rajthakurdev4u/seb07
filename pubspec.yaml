@@ -45,6 +45,7 @@ dependencies:
   provider: ^6.0.3
   shared_preferences: ^2.0.15
   uuid: ^3.0.6
+  video_player: ^2.4.5
   youtube_parser: ^2.0.0
   youtube_player_flutter: ^8.1.0
   youtube_player_iframe: ^2.3.0

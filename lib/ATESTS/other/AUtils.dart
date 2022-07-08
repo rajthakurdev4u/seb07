@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -12,6 +13,8 @@ import '../provider/AUserProvider.dart';
 import '../responsive/AMobileScreenLayout.dart';
 import '../responsive/AResponsiveLayout.dart';
 import '../responsive/AWebScreenLayout.dart';
+import 'AReAuthenticationDialog.dart';
+import 'ATextField.dart';
 
 pickImage(ImageSource source) async {
   final ImagePicker _imagePicker = ImagePicker();
@@ -69,6 +72,40 @@ void goToHome(BuildContext context) {
             )),
     (route) => false,
   );
+}
+
+// Validates "username" field
+Future<String?> usernameValidator({required String? username}) async {
+  // Validates username complexity
+  bool isUsernameComplex(String? text) {
+    final String _text = (text ?? "");
+    // String? p = r"^(?=(.*[0-9]))(?=(.*[A-Za-z]))";
+    String? p = r"^(?=(.*[ @$!%*?&=_+/#^.~`]))";
+    RegExp regExp = RegExp(p);
+    return regExp.hasMatch(_text);
+  }
+
+  final String _text = (username ?? "");
+
+  // Complexity check
+  if (isUsernameComplex(_text)) {
+    return "Username should only be letters and numbers";
+  }
+  // Length check
+  else if (_text.length < 3 || _text.length > 16) {
+    return "Username should be 3-16 characters long";
+  }
+
+  // Availability check
+  var val = await FirebaseFirestore.instance
+      .collection('users')
+      .where('username', isEqualTo: _text)
+      .get();
+  if (val.docs.isNotEmpty) {
+    return "This username is already taken";
+  }
+
+  return null;
 }
 
 // Checks whether user is logged in
@@ -259,6 +296,21 @@ performLoggedUserAction({
       ),
     );
   }
+}
+
+// Re authenticates user before performing action
+Future<bool> performReAuthenticationAction({
+  required BuildContext context,
+}) async {
+  bool? authenticated = false;
+  final User? user = Provider.of<UserProvider>(context, listen: false).getUser;
+  if (user != null) {
+    authenticated = await showDialog<bool>(
+      context: context,
+      builder: (_) => const ReAuthenticationDialog(),
+    );
+  }
+  return authenticated ?? false;
 }
 
 String trimText({

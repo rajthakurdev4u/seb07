@@ -31,10 +31,12 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         theme: ThemeData(
-            inputDecorationTheme: const InputDecorationTheme(
-          labelStyle: TextStyle(color: Colors.black),
-          hintStyle: TextStyle(color: Colors.grey),
-        )),
+          inputDecorationTheme: const InputDecorationTheme(
+            labelStyle: TextStyle(color: Colors.black),
+            hintStyle: TextStyle(color: Colors.grey),
+          ),
+          scaffoldBackgroundColor: const Color.fromARGB(255, 236, 234, 234),
+        ),
         home: const ResponsiveLayout(
           mobileScreenLayout: MobileScreenLayout(),
           webScreenLayout: WebScreenLayout(),

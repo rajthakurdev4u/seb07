@@ -38,10 +38,12 @@ class TextFieldInputDone extends StatelessWidget {
   final bool isPass;
   final String hintText;
   final TextInputType textInputType;
-  const TextFieldInputDone(
+  EdgeInsets? contentPadding;
+   TextFieldInputDone(
       {Key? key,
       required this.textEditingController,
       this.isPass = false,
+      this.contentPadding,
       required this.hintText,
       required this.textInputType})
       : super(key: key);
@@ -58,7 +60,7 @@ class TextFieldInputDone extends StatelessWidget {
         focusedBorder: inputBorder,
         enabledBorder: inputBorder,
         filled: true,
-        contentPadding: const EdgeInsets.all(8),
+        contentPadding: contentPadding ?? const EdgeInsets.all(8),
       ),
       keyboardType: textInputType,
       obscureText: isPass,
