@@ -32,6 +32,17 @@ pickImage(ImageSource source) async {
   print("No image selected");
 }
 
+pickVideo(ImageSource source) async {
+  final ImagePicker _imagePicker = ImagePicker();
+
+  XFile? _file = await _imagePicker.pickVideo(source: source);
+
+  if (_file != null) {
+    return  File(_file.path);
+  }
+  print("No image selected");
+}
+
 showSnackBar(
   String content,
   BuildContext context,
@@ -118,10 +129,11 @@ Size getScreenSize({required BuildContext context}) {
   return MediaQuery.of(context).size;
 }
 
-Future<Uint8List?> openCamera({
+Future<dynamic> openCamera({
   required BuildContext context,
+  required CameraFileType cameraFileType,
 }) async {
-  Uint8List? photo;
+  dynamic photo;
   try {
     final cameras = await availableCameras();
     print('cameras.length: ${cameras.length}');
@@ -138,12 +150,15 @@ Future<Uint8List?> openCamera({
       return CameraScreen(
         camera: firstCamera,
         secondaryCamera: secondaryCamera,
+        cameraFileType: cameraFileType,
       );
     }));
 
     if (selectedImages?.isNotEmpty ?? false) {
       print(selectedImages?.first);
-      photo = selectedImages?.first.readAsBytesSync();
+      photo = cameraFileType == CameraFileType.image
+          ? selectedImages?.first.readAsBytesSync()
+          : selectedImages?.first;
       // Navigator.pop(context, selectedImages?.first.readAsBytesSync());
     }
   } catch (e) {

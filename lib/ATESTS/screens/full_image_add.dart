@@ -1,10 +1,12 @@
+import 'package:aft/ATESTS/other/camera/components/video_preview.dart';
 import 'package:flutter/src/foundation/key.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/material.dart';
 
 class FullImageScreenAdd extends StatefulWidget {
-  final image;
-  const FullImageScreenAdd({Key? key, required this.image}) : super(key: key);
+  final file;
+
+  const FullImageScreenAdd({Key? key, required this.file}) : super(key: key);
 
   @override
   State<FullImageScreenAdd> createState() => _FullImageScreenAddState();
@@ -69,7 +71,7 @@ class _FullImageScreenAddState extends State<FullImageScreenAdd> {
                     child: Container(
                       decoration: BoxDecoration(
                           image: DecorationImage(
-                        image: widget.image,
+                        image: widget.file,
                         fit: BoxFit.contain,
                         // alignment: FractionalOffset.topCenter,
                       )),

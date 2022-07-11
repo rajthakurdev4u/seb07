@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 import 'dart:typed_data';
+import 'package:aft/ATESTS/other/camera/components/camera_screen.dart';
+import 'package:aft/ATESTS/other/camera/components/preview.dart';
+import 'package:aft/ATESTS/other/camera/components/video_preview.dart';
 import 'package:animated_toggle_switch/animated_toggle_switch.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,8 +12,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart' as ytplayer;
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'dart:core';
@@ -71,8 +77,9 @@ class _AddPostState extends State<AddPost> {
 
   late final KeyboardVisibilityController _keyboardVisibilityController;
   late StreamSubscription<bool> keyboardSubscription;
-
   final int _optionTextfieldMaxLength = 50;
+  bool _isVideoFile = false;
+  File? _videoFile;
 
   @override
   void initState() {
@@ -137,7 +144,7 @@ class _AddPostState extends State<AddPost> {
     };
   }
 
-  _selectvideo(BuildContext context) async {
+  _selectYoutubeVideo(BuildContext context) async {
     return showDialog(
             context: context,
             builder: (context) {
@@ -339,14 +346,16 @@ class _AddPostState extends State<AddPost> {
                 child: const Text('Open Camera',
                     style: TextStyle(letterSpacing: 0.2, fontSize: 15)),
                 onPressed: () async {
-                  Uint8List? file = await openCamera(context: context);
-                  // Uint8List file = await pickImage(
-                  //   ImageSource.camera,
-                  // );
+                  Uint8List? file = await openCamera(
+                    context: context,
+                    cameraFileType: CameraFileType.image,
+                  );
+
                   print(file);
                   if (file != null) {
                     setState(() {
                       _file = file;
+                      _isVideoFile = false;
                     });
                   }
                   Navigator.of(context).pop();
@@ -364,8 +373,89 @@ class _AddPostState extends State<AddPost> {
                   );
                   setState(() {
                     _file = file;
+                    _isVideoFile = false;
                   });
+                },
+              ),
+              SimpleDialogOption(
+                padding: const EdgeInsets.all(20),
+                child: const Text('Cancel',
+                    style: TextStyle(letterSpacing: 0.2, fontSize: 15)),
+                onPressed: () {
+                  print(selected);
+                  _file == null
+                      ? setState(() {
+                          selected = 0;
+                        })
+                      : null;
+                  print(selected);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        }).then((value) => _file == null
+        ? setState(() {
+            selected = 0;
+          })
+        : print('not null'));
+  }
 
+  _selectVideo(BuildContext context) async {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return SimpleDialog(
+            title: Padding(
+              padding: const EdgeInsets.only(top: 5.0),
+              child: const Text("Upload From Phone",
+                  style: TextStyle(
+                    fontSize: 20,
+                    // letterSpacing: 0.3,
+                    color: Colors.transparent,
+                    // Step 2 SEE HERE
+                    shadows: [
+                      Shadow(offset: Offset(0, -5), color: Colors.black)
+                    ],
+                    decoration: TextDecoration.underline,
+                    decorationColor: Colors.black,
+                  )),
+            ),
+            children: [
+              SimpleDialogOption(
+                padding: const EdgeInsets.all(20),
+                child: const Text('Open Camera',
+                    style: TextStyle(letterSpacing: 0.2, fontSize: 15)),
+                onPressed: () async {
+                  var file = await openCamera(
+                    context: context,
+                    cameraFileType: CameraFileType.video,
+                  );
+                  print(file);
+                  if (file != null) {
+                    setState(() {
+                      _file = (file as File).readAsBytesSync();
+                      _videoFile = (file as File);
+                      _isVideoFile = true;
+                    });
+                  }
+                  Navigator.of(context).pop();
+                },
+              ),
+              SimpleDialogOption(
+                padding: const EdgeInsets.all(20),
+                child: const Text('Choose from gallery',
+                    style: TextStyle(letterSpacing: 0.2, fontSize: 15)),
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  File file = await pickVideo(
+                    ImageSource.gallery,
+                  );
+                  setState(() {
+                    _file = (file as File).readAsBytesSync();
+                    _videoFile = (file as File);
+                    _isVideoFile = true;
+                  });
                 },
               ),
               SimpleDialogOption(
@@ -989,11 +1079,23 @@ class _AddPostState extends State<AddPost> {
                                                     context,
                                                     MaterialPageRoute(
                                                         builder: (context) =>
-                                                            FullImageScreenAdd(
-                                                              image:
-                                                                  MemoryImage(
-                                                                      _file!),
-                                                            )),
+                                                            _isVideoFile &&
+                                                                    _videoFile !=
+                                                                        null
+                                                                ? PreviewPictureScreen(
+                                                                    previewOnly:
+                                                                        true,
+                                                                    filePath:
+                                                                        _videoFile!
+                                                                            .path,
+                                                                    cameraFileType:
+                                                                        CameraFileType
+                                                                            .video,
+                                                                  )
+                                                                : FullImageScreenAdd(
+                                                                    file: MemoryImage(
+                                                                        _file!),
+                                                                  )),
                                                   );
                                                 },
                                                 child: Container(
@@ -1009,16 +1111,85 @@ class _AddPostState extends State<AddPost> {
                                                   // child: AspectRatio(
                                                   //   aspectRatio: 487 / 451,
 
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                      image: DecorationImage(
-                                                        image:
-                                                            MemoryImage(_file!),
-                                                        fit: BoxFit.contain,
-                                                        // alignment: FractionalOffset.topCenter,
-                                                      ),
-                                                    ),
-                                                  ),
+                                                  child:
+                                                      _isVideoFile &&
+                                                              _videoFile != null
+                                                          ? FutureBuilder(
+                                                              future:
+                                                                  _getVideoThumbnail(
+                                                                file:
+                                                                    _videoFile!,
+                                                              ),
+                                                              builder: (BuildContext
+                                                                      context,
+                                                                  AsyncSnapshot<
+                                                                          File>
+                                                                      snapshot) {
+                                                                switch (snapshot
+                                                                    .connectionState) {
+
+                                                                  case ConnectionState
+                                                                      .none:
+                                                                    print(
+                                                                        'ConnectionState.none');
+                                                                    break;
+                                                                  case ConnectionState
+                                                                      .waiting:
+                                                                    return const Center(
+                                                                      child:
+                                                                          CircularProgressIndicator(),
+                                                                    );
+                                                                    break;
+                                                                  case ConnectionState
+                                                                      .active:
+                                                                    print(
+                                                                        'ConnectionState.active');
+                                                                    break;
+                                                                  case ConnectionState
+                                                                      .done:
+                                                                    print(
+                                                                        'ConnectionState.done');
+                                                                    break;
+                                                                }
+
+                                                                return snapshot
+                                                                            .data !=
+                                                                        null
+                                                                    ? Stack(
+                                                                        alignment:
+                                                                            Alignment.center,
+                                                                        children: [
+                                                                          Image.file(
+                                                                              snapshot.data!),
+                                                                          const Center(
+                                                                            child:
+                                                                                Icon(
+                                                                              Icons.play_circle_outline,
+                                                                              color: Colors.white,
+                                                                            ),
+                                                                          ),
+                                                                        ],
+                                                                      )
+                                                                    : const Center(
+                                                                        child:
+                                                                            CircularProgressIndicator(),
+                                                                      );
+                                                              },
+                                                            )
+                                                          : Container(
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                image:
+                                                                    DecorationImage(
+                                                                  image:
+                                                                      MemoryImage(
+                                                                          _file!),
+                                                                  fit: BoxFit
+                                                                      .contain,
+                                                                  // alignment: FractionalOffset.topCenter,
+                                                                ),
+                                                              ),
+                                                            ),
                                                   // ),
                                                 ),
                                               ),
@@ -1026,7 +1197,11 @@ class _AddPostState extends State<AddPost> {
                                                 children: [
                                                   IconButton(
                                                     onPressed: () {
-                                                      _selectImage(context);
+                                                      _isVideoFile
+                                                          ? _selectVideo(
+                                                              context)
+                                                          : _selectImage(
+                                                              context);
                                                     },
                                                     icon: const Icon(
                                                         Icons.change_circle,
@@ -1139,7 +1314,8 @@ class _AddPostState extends State<AddPost> {
                                                 children: [
                                                   IconButton(
                                                     onPressed: () {
-                                                      _selectvideo(context);
+                                                      _selectYoutubeVideo(
+                                                          context);
                                                     },
                                                     icon: const Icon(
                                                         Icons.change_circle,
@@ -1702,7 +1878,8 @@ class _AddPostState extends State<AddPost> {
             print('this is the index:');
             print(index);
             index == 1 ? _selectImage(context) : null;
-            index == 2 ? _selectvideo(context) : null;
+            index == 2 ? _selectYoutubeVideo(context) : null;
+            index == 3 ? _selectVideo(context) : null;
             index == 0 || index == 2 ? clearImage() : null;
             index == 0 || index == 1 ? clearVideoUrl() : null;
           },
@@ -1723,5 +1900,18 @@ class _AddPostState extends State<AddPost> {
     IconData data = Icons.flag;
     if (global == 'true') data = Icons.public;
     return Icon(data, size: iconSize.shortestSide, color: Colors.white);
+  }
+
+  Future<File> _getVideoThumbnail({required File file}) async {
+    Directory tempDir = await getTemporaryDirectory();
+    String tempPath = tempDir.path;
+    var filePath = '$tempPath/${DateTime.now().millisecondsSinceEpoch}.png';
+
+    final thumbnail = await VideoThumbnail.thumbnailData(
+      video: file.path,
+      imageFormat: ImageFormat.PNG,
+      quality: 100,
+    );
+    return File(filePath).writeAsBytes(thumbnail!);
   }
 }
