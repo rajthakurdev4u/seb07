@@ -36,6 +36,7 @@ class Poll {
   final List<String> allVotesUIDs;
 
   final datePublished;
+  final endDate;
   dynamic comments;
 
   Poll({
@@ -45,6 +46,7 @@ class Poll {
     required this.profImage,
     required this.country,
     required this.datePublished,
+    required this.endDate,
     required this.global,
     required this.pollTitle,
     required this.option1,
@@ -78,6 +80,7 @@ class Poll {
         "profImage": profImage,
         "country": country,
         "datePublished": datePublished,
+        "endDate": endDate,
         "global": global,
         "pollTitle": pollTitle,
         "option1": option1,
@@ -136,6 +139,7 @@ class Poll {
       vote9: (snapshot['vote9'] ?? []).cast<String>(),
       vote10: (snapshot['vote10'] ?? []).cast<String>(),
       datePublished: snapshot['datePublished'],
+      endDate: snapshot['endDate'],
       totalVotes: snapshot['totalVotes'],
       allVotesUIDs: (snapshot['allVotesUIDs'] ?? []).cast<String>(),
     );

@@ -31,37 +31,37 @@ class FirestoreMethods {
       String pollId = const Uuid().v1();
 
       Poll poll = Poll(
-        pollId: pollId,
-        uid: uid,
-        username: username,
-        profImage: profImage,
-        country: country,
-        datePublished: DateTime.now(),
-        global: global,
-        pollTitle: pollTitle,
-        option1: option1,
-        option2: option2,
-        option3: option3,
-        option4: option4,
-        option5: option5,
-        option6: option6,
-        option7: option7,
-        option8: option8,
-        option9: option9,
-        option10: option10,
-        vote1: [],
-        vote2: [],
-        vote3: [],
-        vote4: [],
-        vote5: [],
-        vote6: [],
-        vote7: [],
-        vote8: [],
-        vote9: [],
-        vote10: [],
-        totalVotes: 0,
-        allVotesUIDs: []
-      );
+          pollId: pollId,
+          uid: uid,
+          username: username,
+          profImage: profImage,
+          country: country,
+          datePublished: DateTime.now(),
+          endDate: DateTime.now().add(const Duration(days: 1)),
+          global: global,
+          pollTitle: pollTitle,
+          option1: option1,
+          option2: option2,
+          option3: option3,
+          option4: option4,
+          option5: option5,
+          option6: option6,
+          option7: option7,
+          option8: option8,
+          option9: option9,
+          option10: option10,
+          vote1: [],
+          vote2: [],
+          vote3: [],
+          vote4: [],
+          vote5: [],
+          vote6: [],
+          vote7: [],
+          vote8: [],
+          vote9: [],
+          vote10: [],
+          totalVotes: 0,
+          allVotesUIDs: []);
 
       _firestore.collection('polls').doc(pollId).set(
             poll.toJson(),
@@ -86,11 +86,10 @@ class FirestoreMethods {
       print('_poll : ${poll.toJson()}');
       print('pollId : $pollId');
 
-
       _firestore.collection('polls').doc(pollId).update({
         'totalVotes': FieldValue.increment(1),
         'vote$optionIndex': FieldValue.arrayUnion([uid]),
-        'allVotesUIDs':  FieldValue.arrayUnion([uid]),
+        'allVotesUIDs': FieldValue.arrayUnion([uid]),
       });
 
       print('POLL SUCCESSFULL');
