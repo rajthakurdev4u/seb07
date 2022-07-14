@@ -33,6 +33,7 @@ class PollCard extends StatefulWidget {
 
 class _PollCardState extends State<PollCard> {
   late Poll _poll;
+  bool _isPollEnded = false;
   bool isLikeAnimating = false;
   int commentLen = 0;
   String placement = '';
@@ -64,7 +65,17 @@ class _PollCardState extends State<PollCard> {
     _poll = widget.poll;
     final User? user = Provider.of<UserProvider>(context).getUser;
     print('_poll.endDate: ${_poll.endDate.runtimeType}');
+
+    _isPollEnded =
+        (_poll.endDate as Timestamp)
+        .toDate()
+        .difference(
+          DateTime.now(),
+        )
+        .isNegative;
+
     return Padding(
+      key: Key(_poll.pollId),
       padding: const EdgeInsets.only(
         top: 8,
         right: 8,
@@ -168,160 +179,167 @@ class _PollCardState extends State<PollCard> {
               ),
             ),
             const SizedBox(height: 8),
-            FlutterPolls(
-              pollId: _poll.pollId,
-              hasVoted: _poll.allVotesUIDs.contains(user?.uid),
-              userVotedOptionId: _getUserPollOptionId(user?.uid ?? ''),
-              // pollEnded: true,
-              pollEnded: (_poll.endDate as Timestamp)
-                  .toDate()
-                  .difference(
-                    DateTime.now(),
-                  )
-                  .isNegative,
-              onVoted: (PollOption pollOption, int newTotalVotes) async {
-                performLoggedUserAction(
-                    context: context,
-                    action: () async {
-                      await FirestoreMethods().poll(
-                        poll: _poll,
-                        uid: user?.uid ?? '',
-                        optionIndex: pollOption.id!,
-                      );
-                    });
-                print('newTotalVotes: ${newTotalVotes}');
-                print('Voted: ${pollOption.id}');
-              },
-              leadingVotedProgessColor: Colors.blue.shade200,
-              pollOptionsSplashColor: Colors.white,
-              votedProgressColor: Colors.blueGrey.withOpacity(0.3),
-              votedBackgroundColor: Colors.grey.withOpacity(0.2),
-              votedCheckmark: const Icon(
-                Icons.check_circle_outline,
-                color: Colors.black,
-                size: 18,
-              ),
-              pollTitle: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  _poll.pollTitle,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+            Stack(
+              children: [
+                FlutterPolls(
+                  pollId: _poll.pollId,
+                  hasVoted: _poll.allVotesUIDs.contains(user?.uid),
+                  userVotedOptionId: _getUserPollOptionId(user?.uid ?? ''),
+                  onVoted: (PollOption pollOption, int newTotalVotes) async {
+                    if (!_isPollEnded) {
+                      performLoggedUserAction(
+                          context: context,
+                          action: () async {
+                            await FirestoreMethods().poll(
+                              poll: _poll,
+                              uid: user?.uid ?? '',
+                              optionIndex: pollOption.id!,
+                            );
+                          });
+                    }
+
+                    print('newTotalVotes: ${newTotalVotes}');
+                    print('Voted: ${pollOption.id}');
+                  },
+                  leadingVotedProgessColor: Colors.blue.shade200,
+                  pollOptionsSplashColor: Colors.white,
+                  votedProgressColor: Colors.blueGrey.withOpacity(0.3),
+                  votedBackgroundColor: Colors.grey.withOpacity(0.2),
+                  votedCheckmark: const Icon(
+                    Icons.check_circle_outline,
+                    color: Colors.black,
+                    size: 18,
+                  ),
+                  pollTitle: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      _poll.pollTitle,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  pollOptions: [
+                    PollOption(
+                      id: 1,
+                      title: Text(
+                        _poll.option1,
+                        style: _pollOptionTextStyle,
+                      ),
+                      votes: _poll.vote1.length,
+                    ),
+                    PollOption(
+                      id: 2,
+                      title: Text(
+                        _poll.option2,
+                        style: _pollOptionTextStyle,
+                      ),
+                      votes: _poll.vote2.length,
+                    ),
+                    if (_poll.option3 != '')
+                      PollOption(
+                        id: 3,
+                        title: Text(
+                          _poll.option3,
+                          style: _pollOptionTextStyle,
+                        ),
+                        votes: _poll.vote3.length,
+                      ),
+                    if (_poll.option4 != '')
+                      PollOption(
+                        id: 4,
+                        title: Text(
+                          _poll.option4,
+                          style: _pollOptionTextStyle,
+                        ),
+                        votes: _poll.vote4.length,
+                      ),
+                    if (_poll.option5 != '')
+                      PollOption(
+                        id: 5,
+                        title: Text(
+                          _poll.option5,
+                          style: _pollOptionTextStyle,
+                        ),
+                        votes: _poll.vote5.length,
+                      ),
+                    if (_poll.option6 != '')
+                      PollOption(
+                        id: 6,
+                        title: Text(
+                          _poll.option6,
+                          style: _pollOptionTextStyle,
+                        ),
+                        votes: _poll.vote6.length,
+                      ),
+                    if (_poll.option7 != '')
+                      PollOption(
+                        id: 7,
+                        title: Text(
+                          _poll.option7,
+                          style: _pollOptionTextStyle,
+                        ),
+                        votes: _poll.vote7.length,
+                      ),
+                    if (_poll.option8 != '')
+                      PollOption(
+                        id: 8,
+                        title: Text(
+                          _poll.option8,
+                          style: _pollOptionTextStyle,
+                        ),
+                        votes: _poll.vote8.length,
+                      ),
+                    if (_poll.option9 != '')
+                      PollOption(
+                        id: 9,
+                        title: Text(
+                          _poll.option9,
+                          style: _pollOptionTextStyle,
+                        ),
+                        votes: _poll.vote9.length,
+                      ),
+                    if (_poll.option10 != '')
+                      PollOption(
+                        id: 10,
+                        title: Text(
+                          _poll.option10,
+                          style: _pollOptionTextStyle,
+                        ),
+                        votes: _poll.vote10.length,
+                      ),
+                  ],
+                  metaWidget: Row(
+                    children: [
+                      const SizedBox(width: 6),
+                      const Text(
+                        '•',
+                        style: TextStyle(
+                          fontSize: 20,
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 6,
+                      ),
+                      Text(
+                        _pollTimeLeftLabel(poll: _poll),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              pollOptions: [
-                PollOption(
-                  id: 1,
-                  title: Text(
-                    _poll.option1,
-                    style: _pollOptionTextStyle,
-                  ),
-                  votes: _poll.vote1.length,
+                Positioned.fill(
+                    child: Visibility(
+                      visible: _isPollEnded,
+                      child: Container(
+                  color: Colors.cyanAccent.withOpacity(0.0),
                 ),
-                PollOption(
-                  id: 2,
-                  title: Text(
-                    _poll.option2,
-                    style: _pollOptionTextStyle,
-                  ),
-                  votes: _poll.vote2.length,
-                ),
-                if (_poll.option3 != '')
-                  PollOption(
-                    id: 3,
-                    title: Text(
-                      _poll.option3,
-                      style: _pollOptionTextStyle,
-                    ),
-                    votes: _poll.vote3.length,
-                  ),
-                if (_poll.option4 != '')
-                  PollOption(
-                    id: 4,
-                    title: Text(
-                      _poll.option4,
-                      style: _pollOptionTextStyle,
-                    ),
-                    votes: _poll.vote4.length,
-                  ),
-                if (_poll.option5 != '')
-                  PollOption(
-                    id: 5,
-                    title: Text(
-                      _poll.option5,
-                      style: _pollOptionTextStyle,
-                    ),
-                    votes: _poll.vote5.length,
-                  ),
-                if (_poll.option6 != '')
-                  PollOption(
-                    id: 6,
-                    title: Text(
-                      _poll.option6,
-                      style: _pollOptionTextStyle,
-                    ),
-                    votes: _poll.vote6.length,
-                  ),
-                if (_poll.option7 != '')
-                  PollOption(
-                    id: 7,
-                    title: Text(
-                      _poll.option7,
-                      style: _pollOptionTextStyle,
-                    ),
-                    votes: _poll.vote7.length,
-                  ),
-                if (_poll.option8 != '')
-                  PollOption(
-                    id: 8,
-                    title: Text(
-                      _poll.option8,
-                      style: _pollOptionTextStyle,
-                    ),
-                    votes: _poll.vote8.length,
-                  ),
-                if (_poll.option9 != '')
-                  PollOption(
-                    id: 9,
-                    title: Text(
-                      _poll.option9,
-                      style: _pollOptionTextStyle,
-                    ),
-                    votes: _poll.vote9.length,
-                  ),
-                if (_poll.option10 != '')
-                  PollOption(
-                    id: 10,
-                    title: Text(
-                      _poll.option10,
-                      style: _pollOptionTextStyle,
-                    ),
-                    votes: _poll.vote10.length,
-                  ),
+                    )),
               ],
-              metaWidget: Row(
-                children: [
-                  const SizedBox(width: 6),
-                  const Text(
-                    '•',
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-                  const SizedBox(
-                    width: 6,
-                  ),
-                  Text(
-                    _pollTimeLeftLabel(poll: _poll),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
             ),
             const SizedBox(height: 8),
           ],
@@ -393,9 +411,16 @@ class _PollCardState extends State<PollCard> {
 
   // Returns poll time left
   String _pollTimeLeftLabel({required Poll poll}) {
+    if (_isPollEnded) {
+      return 'Poll ended on ${DateFormat.yMMMd().format(
+        _poll.endDate.toDate(),
+      )}';
+    }
+
     Duration timeLeft = (_poll.endDate as Timestamp).toDate().difference(
           DateTime.now(),
         );
+
     return timeLeft.inHours >= 1
         ? "${timeLeft.inHours} hours left"
         : "${timeLeft.inMinutes} minutes left";
