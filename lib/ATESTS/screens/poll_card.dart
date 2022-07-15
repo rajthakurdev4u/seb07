@@ -1,12 +1,12 @@
 import 'dart:developer';
 
 import 'package:aft/ATESTS/other/AUtils.dart';
+import 'package:aft/ATESTS/other/poll_view/PollView.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_polls/flutter_polls.dart';
 import 'package:intl/intl.dart';
 
 // import 'package:polls/polls.dart';
@@ -66,8 +66,7 @@ class _PollCardState extends State<PollCard> {
     final User? user = Provider.of<UserProvider>(context).getUser;
     print('_poll.endDate: ${_poll.endDate.runtimeType}');
 
-    _isPollEnded =
-        (_poll.endDate as Timestamp)
+    _isPollEnded = (_poll.endDate as Timestamp)
         .toDate()
         .difference(
           DateTime.now(),
@@ -181,9 +180,10 @@ class _PollCardState extends State<PollCard> {
             const SizedBox(height: 8),
             Stack(
               children: [
-                FlutterPolls(
+                PollView(
                   pollId: _poll.pollId,
                   hasVoted: _poll.allVotesUIDs.contains(user?.uid),
+                  pollEnded: _isPollEnded,
                   userVotedOptionId: _getUserPollOptionId(user?.uid ?? ''),
                   onVoted: (PollOption pollOption, int newTotalVotes) async {
                     if (!_isPollEnded) {
@@ -334,11 +334,11 @@ class _PollCardState extends State<PollCard> {
                 ),
                 Positioned.fill(
                     child: Visibility(
-                      visible: _isPollEnded,
-                      child: Container(
-                  color: Colors.cyanAccent.withOpacity(0.0),
-                ),
-                    )),
+                  visible: _isPollEnded,
+                  child: Container(
+                    color: Colors.cyanAccent.withOpacity(0.0),
+                  ),
+                )),
               ],
             ),
             const SizedBox(height: 8),
