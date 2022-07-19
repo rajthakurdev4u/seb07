@@ -32,12 +32,14 @@ class _ReportUserScreenState extends State<ReportUserScreen> {
             children: [
               InkWell(
                 onTap: () {
-                  // sendEmail(
-                  //   name: user?.username ?? '',
-                  //   email: user?.email ?? '',
-                  //   subject: 'From Admin',
-                  //   message: 'one',
-                  // );
+                  sendEmail(
+                    receiverName: user?.username ?? '',
+                    receiverEmail: user?.email ?? '',
+                    senderEmail: 'rajthakur.dev4u@gmail.com',
+                    senderName: 'Raj Thakur',
+                    subject: 'From Admin',
+                    message: 'one',
+                  );
                 },
                 child: Container(
                   color: Colors.blue,
@@ -50,8 +52,7 @@ class _ReportUserScreenState extends State<ReportUserScreen> {
                 onTap: () {
                   sendEmail(
                     receiverName: user?.username ?? '',
-                    // receiverEmail: user?.email ?? '',
-                    receiverEmail: 'rjjin.19@gmail.com',
+                    receiverEmail: user?.email ?? '',
                     senderEmail: 'rajthakur.dev4u@gmail.com',
                     senderName: 'Raj Thakur',
                     subject: 'From Admin',
