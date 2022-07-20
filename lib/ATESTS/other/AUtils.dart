@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:http/http.dart' as http;
 
 import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -38,7 +40,7 @@ pickVideo(ImageSource source) async {
   XFile? _file = await _imagePicker.pickVideo(source: source);
 
   if (_file != null) {
-    return  File(_file.path);
+    return File(_file.path);
   }
   print("No image selected");
 }
@@ -392,4 +394,50 @@ String trimText({
   }
 
   return trimmedText;
+}
+
+Future sendEmail({
+  required BuildContext context,
+
+  // Sender
+  required String senderName,
+  required String senderEmail,
+
+  // Receiver
+  required String receiverName,
+  required String receiverEmail,
+
+  // Email
+  required String subject,
+  required String message,
+}) async {
+
+  const String emailJsServiceID = 'service_yrlbc78';
+  const String emailJsTemplateID = 'template_wuca3xo';
+  const String emailJsUserID = 'mNBhdn2YkFbAHdmzY';
+
+  var url = Uri.parse('https://api.emailjs.com/api/v1.0/email/send');
+  var response = await http.post(
+    url,
+    headers: {
+      'origin': 'http://localhost',
+      'Content-type': 'application/json',
+    },
+    body: jsonEncode({
+      'service_id': emailJsServiceID,
+      'template_id': emailJsTemplateID,
+      'user_id': emailJsUserID,
+      'template_params': {
+        'sender_name': senderName,
+        'sender_email': senderEmail,
+        'receiver_name': receiverName,
+        'receiver_email': receiverEmail,
+        'subject': subject,
+        'message': message,
+      }
+    }),
+  );
+
+  print('response: ${response.body}');
+  showSnackBar('Email sent successfully to $receiverEmail.', context);
 }
