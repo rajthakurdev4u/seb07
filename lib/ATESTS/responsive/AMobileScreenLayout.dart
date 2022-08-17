@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../models/user.dart' as model;
 import '../provider/user_provider.dart';
-import '../other/global_variables.dart';
+import '../utils/global_variables.dart';
 
 class MobileScreenLayout extends StatefulWidget {
   const MobileScreenLayout({Key? key}) : super(key: key);

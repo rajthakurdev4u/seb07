@@ -2,9 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../methods/auth_methods.dart';
-import '../other/global_variables.dart';
-import '../other/text_field.dart';
-import '../other/utils.dart.dart';
+import '../utils/global_variables.dart';
+import '../utils/text_field.dart';
+import '../utils/utils.dart';
 import 'signup.dart';
 import 'forgot_password.dart';
 

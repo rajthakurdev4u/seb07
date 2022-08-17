@@ -1,5 +1,4 @@
 import 'package:aft/ATESTS/poll/percent_animation.dart';
-
 import 'package:flutter/material.dart';
 
 class PollView extends StatefulWidget {
@@ -270,16 +269,19 @@ class _PollViewState extends State<PollView> {
                               child: Row(
                                 children: [
                                   pollOption.title,
-                                  const SizedBox(width: 10),
+                                  const SizedBox(width: 6),
                                   if (votedOption != null &&
                                       votedOption?.id == pollOption.id)
-                                    widget.votedCheckmark ??
-                                        const Icon(
-                                          Icons.check_circle_outline_rounded,
-                                          color: Colors.black,
-                                          size: 16,
-                                        ),
-                                  const Spacer(),
+                                    Container(
+                                      child: widget.votedCheckmark ??
+                                          const Icon(
+                                            Icons.check_circle_outline_rounded,
+                                            color: Colors.black,
+                                            size: 16,
+                                          ),
+                                    ),
+                                  Container(width: 6),
+                                  // const Spacer(),
                                   Text(
                                     '${totalVotes == 0 ? '0.0' : '${(pollOption.votes / totalVotes * 100).toStringAsFixed(1)}'}%',
                                     style: widget.votedPercentageTextStyle,
@@ -309,7 +311,7 @@ class _PollViewState extends State<PollView> {
                             child: Container(
                               height: widget.pollOptionsHeight,
                               width: widget.pollOptionsWidth,
-                              padding: EdgeInsets.zero,
+                              padding: EdgeInsets.symmetric(horizontal: 8),
                               decoration: BoxDecoration(
                                 color: widget.pollOptionsFillColor,
                                 border: widget.pollOptionsBorder ??

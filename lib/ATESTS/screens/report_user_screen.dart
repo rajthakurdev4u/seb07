@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/user.dart';
-import '../other/utils.dart.dart';
+import '../utils/utils.dart';
 import '../provider/user_provider.dart';
 
 class ReportUserScreen extends StatefulWidget {

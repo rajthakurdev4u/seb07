@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 import '../models/post.dart';
 import '../models/poll.dart';
-import '../other/utils.dart.dart';
+import '../utils/utils.dart';
 
 class FirestoreMethods {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -142,7 +142,9 @@ class FirestoreMethods {
         plus: [],
         neutral: [],
         minus: [],
+        allVotesUIDs: [],
         score: 0,
+        category: 1,
       );
 
       _firestore.collection('posts').doc(postId).set(
@@ -207,12 +209,14 @@ class FirestoreMethods {
       if (plus.contains(uid)) {
         await _firestore.collection('posts').doc(postId).update({
           'plus': FieldValue.arrayRemove([uid]),
+          'allVotesUIDs': FieldValue.arrayRemove([uid]),
         });
       } else {
         await _firestore.collection('posts').doc(postId).update({
           'plus': FieldValue.arrayUnion([uid]),
           'neutral': FieldValue.arrayRemove([uid]),
           'minus': FieldValue.arrayRemove([uid]),
+          'allVotesUIDs': FieldValue.arrayUnion([uid]),
         });
       }
     } catch (e) {
@@ -227,12 +231,14 @@ class FirestoreMethods {
       if (neutral.contains(uid)) {
         await _firestore.collection('posts').doc(postId).update({
           'neutral': FieldValue.arrayRemove([uid]),
+          'allVotesUIDs': FieldValue.arrayRemove([uid]),
         });
       } else {
         await _firestore.collection('posts').doc(postId).update({
           'neutral': FieldValue.arrayUnion([uid]),
           'plus': FieldValue.arrayRemove([uid]),
           'minus': FieldValue.arrayRemove([uid]),
+          'allVotesUIDs': FieldValue.arrayUnion([uid]),
         });
       }
     } catch (e) {
@@ -251,12 +257,14 @@ class FirestoreMethods {
       if (minus.contains(uid)) {
         await _firestore.collection('posts').doc(postId).update({
           'minus': FieldValue.arrayRemove([uid]),
+          'allVotesUIDs': FieldValue.arrayRemove([uid]),
         });
       } else {
         await _firestore.collection('posts').doc(postId).update({
           'minus': FieldValue.arrayUnion([uid]),
           'plus': FieldValue.arrayRemove([uid]),
           'neutral': FieldValue.arrayRemove([uid]),
+          'allVotesUIDs': FieldValue.arrayUnion([uid]),
         });
       }
     } catch (e) {

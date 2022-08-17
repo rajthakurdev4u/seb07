@@ -112,7 +112,7 @@ Future<String?> usernameValidator({required String? username}) async {
   // Availability check
   var val = await FirebaseFirestore.instance
       .collection('users')
-      .where('username', isEqualTo: _text)
+      .where('usernameLower', isEqualTo: _text.toLowerCase())
       .get();
   if (val.docs.isNotEmpty) {
     return "This username is already taken.";
@@ -244,7 +244,7 @@ performLoggedUserAction({
                   width: MediaQuery.of(context).size.width * 0.8,
                   height: MediaQuery.of(context).size.height * 0.42,
                   decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(25),
                       color: Colors.white),
                   padding: EdgeInsets.fromLTRB(10, 45, 10, 0),
                   child: Column(
@@ -286,10 +286,9 @@ performLoggedUserAction({
                                   goToLogin(context);
                                 },
                                 child: Container(
-                                  width: MediaQuery.of(context).size.height *
-                                      0.195,
+                                  width: 175,
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(25),
                                     color: Colors.blueGrey,
                                   ),
                                   padding: EdgeInsets.symmetric(
@@ -317,7 +316,7 @@ performLoggedUserAction({
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Container(
-                                      width: 50,
+                                      width: 60,
                                       decoration: BoxDecoration(
                                         // color: Colors.red,
                                         border: Border(
@@ -335,7 +334,7 @@ performLoggedUserAction({
                                         )),
                                     Container(width: 4),
                                     Container(
-                                      width: 50,
+                                      width: 60,
                                       decoration: BoxDecoration(
                                         // color: Colors.red,
                                         border: Border(
@@ -354,195 +353,9 @@ performLoggedUserAction({
                                   goToSignup(context);
                                 },
                                 child: Container(
-                                  width: MediaQuery.of(context).size.height *
-                                      0.195,
+                                  width: 175,
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color: Colors.blueGrey,
-                                  ),
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 12),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text('Sign Up',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                          )),
-                                      Container(width: 10),
-                                      Icon(Icons.verified_user,
-                                          size: 22, color: Colors.white)
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  top: -50,
-                  child: CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.white,
-                    child: FittedBox(
-                      child: RotatedBox(
-                        quarterTurns: 2,
-                        child: Icon(
-                          Icons.info,
-                          size: 200,
-                          color: Colors.blueGrey,
-                        ),
-                      ),
-                    ),
-                  ),
-                )
-              ],
-            )));
-  }
-}
-
-performLoggedUserActionProfile({
-  required BuildContext context,
-  required Function action,
-}) {
-  final User? user = Provider.of<UserProvider>(context, listen: false).getUser;
-  if (user != null) {
-    action();
-  } else {
-    showDialog(
-        context: context,
-        builder: (_) => Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: EdgeInsets.zero,
-            child: Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.center,
-              children: <Widget>[
-                Container(
-                  // width: double.infinity,
-                  width: MediaQuery.of(context).size.width * 0.8,
-                  height: MediaQuery.of(context).size.height * 0.42,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      color: Colors.white),
-                  padding: EdgeInsets.fromLTRB(10, 45, 10, 0),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          top: 14.0,
-                        ),
-                        child: Text('Action Failed',
-                            style: TextStyle(
-                                fontSize: 21, fontWeight: FontWeight.bold)),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 0.0),
-                        child: Text('A registered account is required.',
-                            style: TextStyle(
-                              fontSize: 16,
-                            )),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 25.0, bottom: 10),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            // color: Colors.red,
-                            border: Border(
-                                // top: BorderSide(
-                                //     width: 1,
-                                //     color: Color.fromARGB(255, 218, 216, 216)),
-                                ),
-                          ),
-                          // child: Padding(
-                          //   padding:
-                          //       const EdgeInsets.only(top: 14.0, bottom: 14),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              InkWell(
-                                onTap: () async {
-                                  goToLogin(context);
-                                },
-                                child: Container(
-                                  width: MediaQuery.of(context).size.height *
-                                      0.195,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color: Colors.blueGrey,
-                                  ),
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 12),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text('Login',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                          )),
-                                      Container(width: 10),
-                                      Icon(Icons.login,
-                                          size: 22, color: Colors.white)
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 6.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      width: 50,
-                                      decoration: BoxDecoration(
-                                        // color: Colors.red,
-                                        border: Border(
-                                          top: BorderSide(
-                                              width: 1,
-                                              color:
-                                                  Color.fromARGB(255, 0, 0, 0)),
-                                        ),
-                                      ),
-                                    ),
-                                    Container(width: 4),
-                                    Text('or',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                        )),
-                                    Container(width: 4),
-                                    Container(
-                                      width: 50,
-                                      decoration: BoxDecoration(
-                                        // color: Colors.red,
-                                        border: Border(
-                                          top: BorderSide(
-                                              width: 1,
-                                              color:
-                                                  Color.fromARGB(255, 0, 0, 0)),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              InkWell(
-                                onTap: () {
-                                  goToSignup(context);
-                                },
-                                child: Container(
-                                  width: MediaQuery.of(context).size.height *
-                                      0.195,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(25),
                                     color: Colors.blueGrey,
                                   ),
                                   padding: EdgeInsets.symmetric(

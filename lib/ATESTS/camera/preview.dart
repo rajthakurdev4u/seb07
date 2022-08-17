@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:aft/ATESTS/camera/video_preview.dart';
 import 'package:flutter/material.dart';
 import '../authentication/signup.dart';
-import '../other/utils.dart.dart';
+import '../screens/send_photo_2.dart';
+import '../screens/send_photo_3.dart';
+import '../utils/utils.dart';
 
 import 'camera_loader.dart';
 import 'camera_screen.dart';
@@ -123,16 +125,14 @@ class _PreviewPictureScreenState extends State<PreviewPictureScreen> {
                                 onTap: () {
                                   widget.add == "true"
                                       ? Navigator.pop(context, true)
-                                      : null;
-                                  // Navigator.push(
-                                  //     context,
-                                  //     MaterialPageRoute(
-                                  //         builder: (context) =>
-                                  //             widget.add != "one"
-                                  //                 ? VerifyThree()
-                                  //                 :
-                                  //                 SignupScreen()),
-                                  //   );
+                                      : Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  widget.add == "1"
+                                                      ? SendPhotoTwo()
+                                                      : SendPhotoThree()),
+                                        );
                                 },
                               ),
                             ],

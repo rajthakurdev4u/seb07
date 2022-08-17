@@ -2,59 +2,91 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
+import '../methods/auth_methods.dart';
 import '../methods/firestore_methods.dart';
-import '../models/post.dart';
+import '../models/poll.dart';
 import '../models/user.dart';
-import '../other/utils.dart.dart';
+import '../screens/profile_screen_poll.dart';
+import '../utils/utils.dart';
 import '../provider/user_provider.dart';
 import '../screens/full_message.dart';
 import '../screens/like_animation.dart';
 import '../screens/report_user_screen.dart';
 import 'dart:ui' as ui;
 
-class CommentCard extends StatefulWidget {
+class CommentCardPoll extends StatefulWidget {
   // Comment
-  final postId;
+  final pollId;
   final snap;
-  final bool? plus;
-  final bool? neutral;
-  final bool? minus;
+  final String? option1;
+  final String? option2;
+  final String? option3;
+  final String? option4;
+  final String? option5;
+  final String? option6;
+  final String? option7;
+  final String? option8;
+  final String? option9;
+  final String? option10;
+  final bool? vote1;
+  final bool? vote2;
+  final bool? vote3;
+  final bool? vote4;
+  final bool? vote5;
+  final bool? vote6;
+  final bool? vote7;
+  final bool? vote8;
+  final bool? vote9;
+  final bool? vote10;
   final Function parentSetState;
 
   // Reply
   final bool isReply;
-  final Post? parentPost;
+  final Poll? parentPost;
   final String? parentCommentId;
-  // final FocusNode? parentFocusNode;
-  // final TextEditingController? parentReplyTextController;
   final String? parentReplyId;
 
-  const CommentCard({
+  const CommentCardPoll({
     Key? key,
 
     // Reply
     this.isReply = false,
     this.parentCommentId,
-    // this.parentFocusNode,
-    // this.parentReplyTextController,
     this.parentPost,
     this.parentReplyId,
 
     // Comment
-    required this.postId,
+    required this.pollId,
     required this.snap,
-    this.plus,
-    this.neutral,
-    this.minus,
+    this.vote1,
+    this.vote2,
+    this.vote3,
+    this.vote4,
+    this.vote5,
+    this.vote6,
+    this.vote7,
+    this.vote8,
+    this.vote9,
+    this.vote10,
+    this.option1,
+    this.option2,
+    this.option3,
+    this.option4,
+    this.option5,
+    this.option6,
+    this.option7,
+    this.option8,
+    this.option9,
+    this.option10,
     required this.parentSetState,
   }) : super(key: key);
 
   @override
-  State<CommentCard> createState() => _CommentCardState();
+  State<CommentCardPoll> createState() => _CommentCardPollState();
 }
 
-class _CommentCardState extends State<CommentCard> {
+class _CommentCardPollState extends State<CommentCardPoll> {
+  late Poll _poll;
   User? user;
   final TextEditingController _replyController = TextEditingController();
   FocusNode currentReplyFocusNode = FocusNode();
@@ -65,12 +97,8 @@ class _CommentCardState extends State<CommentCard> {
   int _likes = 0;
   int _dislikes = 0;
   dynamic commentReplies;
-
-  @override
-  void dispose() {
-    super.dispose();
-    _replyController.dispose();
-  }
+  final AuthMethods _authMethods = AuthMethods();
+  User? _userProfile;
 
   _otherUsers(BuildContext context) async {
     return showDialog(
@@ -141,10 +169,10 @@ class _CommentCardState extends State<CommentCard> {
                 ),
                 onPressed: () async {
                   widget.isReply
-                      ? FirestoreMethods().deleteReply(widget.postId,
+                      ? FirestoreMethods().deletePollReply(widget.pollId,
                           widget.parentCommentId!, widget.snap['replyId'])
-                      : FirestoreMethods().deleteComment(
-                          widget.postId,
+                      : FirestoreMethods().deletePollComment(
+                          widget.pollId,
                           widget.snap['commentId'],
                         );
                   Navigator.of(context).pop();
@@ -156,6 +184,27 @@ class _CommentCardState extends State<CommentCard> {
             ],
           );
         });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _poll = widget.parentPost!;
+    getUserDetails();
+  }
+
+  getUserDetails() async {
+    User userProfile =
+        await _authMethods.getUserProfileDetails(widget.snap['uid']);
+    setState(() {
+      _userProfile = userProfile;
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _replyController.dispose();
   }
 
   @override
@@ -184,10 +233,8 @@ class _CommentCardState extends State<CommentCard> {
                   // color: Colors.blue,
                   border: Border(
                     top: BorderSide(
-                        width: 1,
-                        color: widget.isReply
-                            ? Colors.white
-                            : Color.fromARGB(255, 218, 216, 216)),
+                        width: 0,
+                        color: widget.isReply ? Colors.white : Colors.grey),
                   ),
                 ),
                 child: Container(
@@ -210,17 +257,82 @@ class _CommentCardState extends State<CommentCard> {
                       ),
                 child: Row(
                   children: [
-                    CircleAvatar(
-                      backgroundColor: Color.fromARGB(255, 227, 227, 227),
-                      backgroundImage: NetworkImage(
-                        widget.snap['profilePic'],
-                      ),
-                      radius: widget.isReply ? 14 : 18,
-                    ),
+                    InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ProfilePoll(
+                                      poll: _poll,
+                                    )),
+                          );
+                          //   // print(widget.snap['profilePic']);
+                        },
+                        child: Stack(
+                          children: [
+                            _userProfile?.photoUrl != null
+                                ? CircleAvatar(
+                                    backgroundColor:
+                                        Color.fromARGB(255, 227, 227, 227),
+                                    backgroundImage: NetworkImage(
+                                        '${_userProfile?.photoUrl}'),
+                                    radius: widget.isReply ? 16 : 20,
+                                  )
+                                : CircleAvatar(
+                                    backgroundColor:
+                                        Color.fromARGB(255, 227, 227, 227),
+                                    backgroundImage:
+                                        AssetImage('assets/avatarFT.jpg'),
+                                    radius: widget.isReply ? 16 : 20,
+                                  ),
+                            Positioned(
+                              bottom: 0,
+                              right: widget.isReply ? 2 : 2.8,
+                              child: Container(
+                                child: Row(
+                                  children: [
+                                    _userProfile?.profileFlag == "true"
+                                        ? Container(
+                                            width: widget.isReply ? 13.5 : 15.5,
+                                            height: widget.isReply ? 6.75 : 7.7,
+                                            child: Image.asset(
+                                                'icons/flags/png/${user?.country}.png',
+                                                package: 'country_icons'))
+                                        : Row()
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                child: Row(
+                                  children: [
+                                    _userProfile?.profileBadge == "true"
+                                        ? CircleAvatar(
+                                            radius: widget.isReply ? 5 : 6,
+                                            backgroundColor: Color.fromARGB(
+                                                255, 245, 245, 245),
+                                            child: Container(
+                                              child: Icon(Icons.verified,
+                                                  color: Color.fromARGB(
+                                                      255, 113, 191, 255),
+                                                  size:
+                                                      widget.isReply ? 10 : 12),
+                                            ),
+                                          )
+                                        : Row()
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        )),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(
-                          left: 16,
+                          left: 10,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,67 +340,157 @@ class _CommentCardState extends State<CommentCard> {
                           children: [
                             Row(
                               children: [
-                                Container(
-                                  // width: 270,
-                                  // color: Colors.brown,
-                                  child: Text(
-                                    widget.snap['name'],
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                                Container(width: 8),
-                                Visibility(
-                                  visible: widget.minus ?? false,
-                                  child: Icon(
-                                    Icons.do_not_disturb_on,
-                                    color: Colors.red,
-                                    size: 15,
-                                  ),
-                                ),
-                                Visibility(
-                                  visible: widget.plus ?? false,
-                                  child: Icon(
-                                    Icons.add_circle,
-                                    color: Colors.green,
-                                    size: 15,
-                                  ),
-                                ),
-                                Visibility(
-                                  visible: widget.neutral ?? false,
-                                  child: RotatedBox(
-                                    quarterTurns: 1,
-                                    child: Icon(
-                                      Icons.pause_circle_filled,
-                                      color: Color.fromARGB(255, 111, 111, 111),
-                                      size: 15,
-                                    ),
-                                  ),
-                                ),
                                 Expanded(
                                   child: Container(
+                                    // width: 270,
                                     // color: Colors.brown,
-                                    alignment: Alignment.centerRight,
-                                    child: InkWell(
-                                      onTap: widget.snap['uid'] == user?.uid
-                                          ? () => _deletePost(context)
-                                          : () => _otherUsers(context),
-                                      child:
-                                          const Icon(Icons.more_vert, size: 18),
+                                    child: Text(
+                                      widget.snap['name'],
+                                      maxLines: 1,
+                                      style: const TextStyle(
+                                          overflow: TextOverflow.ellipsis,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black,
+                                          letterSpacing: 0.5),
                                     ),
+                                  ),
+                                ),
+                                Container(
+                                  // color: Colors.brown,
+                                  alignment: Alignment.centerRight,
+                                  child: InkWell(
+                                    onTap: widget.snap['uid'] == user?.uid
+                                        ? () => _deletePost(context)
+                                        : () => _otherUsers(context),
+                                    child:
+                                        const Icon(Icons.more_vert, size: 18),
                                   ),
                                 ),
                               ],
                             ),
                             Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                DateFormat.yMMMd().format(
-                                    widget.snap['datePublished'].toDate()),
-                                style: const TextStyle(
-                                    fontSize: 12, fontWeight: FontWeight.w400),
+                              padding: const EdgeInsets.only(top: 0),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    DateFormat.yMMMd().format(
+                                        widget.snap['datePublished'].toDate()),
+                                    style: const TextStyle(
+                                        fontSize: 11, color: Colors.grey),
+                                  ),
+                                  Visibility(
+                                    visible: widget.vote1 ?? false,
+                                    child: Expanded(
+                                      child: Row(
+                                        children: [
+                                          const SizedBox(width: 6),
+                                          const Text(
+                                            '•',
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            width: 6,
+                                          ),
+                                          Container(
+                                            padding: EdgeInsets.only(
+                                                top: 6, bottom: 6, left: 6),
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.only(
+                                                topLeft: Radius.circular(25),
+                                                bottomLeft: Radius.circular(25),
+                                              ),
+                                              color: Color.fromARGB(
+                                                  255, 245, 245, 245),
+                                            ),
+                                            child: Text('Voted: ',
+                                                style: TextStyle(
+                                                    fontSize: 10.5,
+                                                    color: Color.fromARGB(
+                                                        255, 111, 111, 111))),
+                                          ),
+                                          Flexible(
+                                            child: Container(
+                                              padding: EdgeInsets.only(
+                                                  top: 4.5,
+                                                  bottom: 4.5,
+                                                  right: 6,
+                                                  left: 1),
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.only(
+                                                  topRight: Radius.circular(25),
+                                                  bottomRight:
+                                                      Radius.circular(25),
+                                                ),
+                                                color: Color.fromARGB(
+                                                    255, 245, 245, 245),
+                                              ),
+                                              child: Text('${widget.option1}',
+                                                  maxLines: 1,
+                                                  style: TextStyle(
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      color: Color.fromARGB(
+                                                          255, 111, 111, 111),
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w500)),
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  Visibility(
+                                    visible: widget.vote2 ?? false,
+                                    child: Row(
+                                      children: [
+                                        const SizedBox(width: 8),
+                                        const Text(
+                                          '•',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          width: 8,
+                                        ),
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 7, vertical: 3.5),
+                                          decoration: BoxDecoration(
+                                            color: Color.fromARGB(
+                                                255, 245, 245, 245),
+                                            borderRadius:
+                                                BorderRadius.circular(25),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Text('Voted: ',
+                                                  style: TextStyle(
+                                                      fontSize: 10.5,
+                                                      color: Color.fromARGB(
+                                                          255, 111, 111, 111))),
+                                              Text('${widget.option2}',
+                                                  maxLines: 1,
+                                                  style: TextStyle(
+                                                      color: Color.fromARGB(
+                                                          255, 111, 111, 111),
+                                                      fontSize: 13,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      fontWeight:
+                                                          FontWeight.w500))
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -298,28 +500,7 @@ class _CommentCardState extends State<CommentCard> {
                   ],
                 ),
               ),
-              //FIX BETWEEN REPLIES AND COMMENTS
-              // widget.isReply
-              //     ? Row(
-              //         mainAxisAlignment: MainAxisAlignment.start,
-              //         children: [
-              //           Container(
-              //             // alignment: Alignment.centerLeft,
-              //             padding: const EdgeInsets.only(left: 62, right: 16),
-              //             child: buildText('${widget.snap['text']}'),
-              //           ),
-              //         ],
-              //       )
-              //     : Row(
-              //         mainAxisAlignment: MainAxisAlignment.start,
-              //         children: [
-              //           Container(
-              //             // alignment: Alignment.centerLeft,
-              //             padding: const EdgeInsets.only(left: 70, right: 16),
-              //             child: buildText('${widget.snap['text']}'),
-              //           ),
-              //         ],
-              //       ),
+
               Container(
                 // alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.only(left: 68, right: 16),
@@ -361,16 +542,17 @@ class _CommentCardState extends State<CommentCard> {
                                     context: context,
                                     action: () async {
                                       widget.isReply
-                                          ? await FirestoreMethods().likeReply(
-                                              widget.postId,
-                                              widget.parentCommentId!,
-                                              user?.uid ?? '',
-                                              widget.snap['likes'],
-                                              widget.snap['dislikes'],
-                                              widget.snap['replyId'])
+                                          ? await FirestoreMethods()
+                                              .likePollReply(
+                                                  widget.pollId,
+                                                  widget.parentCommentId!,
+                                                  user?.uid ?? '',
+                                                  widget.snap['likes'],
+                                                  widget.snap['dislikes'],
+                                                  widget.snap['replyId'])
                                           : await FirestoreMethods()
-                                              .likeComment(
-                                              widget.postId,
+                                              .likePollComment(
+                                              widget.pollId,
                                               widget.snap['commentId'],
                                               user?.uid ?? '',
                                               widget.snap['likes'],
@@ -413,16 +595,16 @@ class _CommentCardState extends State<CommentCard> {
                                     action: () async {
                                       widget.isReply
                                           ? await FirestoreMethods()
-                                              .dislikeReply(
-                                                  widget.postId,
+                                              .dislikePollReply(
+                                                  widget.pollId,
                                                   widget.parentCommentId!,
                                                   user?.uid ?? '',
                                                   widget.snap['likes'],
                                                   widget.snap['dislikes'],
                                                   widget.snap['replyId'])
                                           : await FirestoreMethods()
-                                              .dislikeComment(
-                                              widget.postId,
+                                              .dislikePollComment(
+                                              widget.pollId,
                                               widget.snap['commentId'],
                                               user?.uid ?? '',
                                               widget.snap['likes'],
@@ -506,8 +688,8 @@ class _CommentCardState extends State<CommentCard> {
                 visible: !widget.isReply,
                 child: StreamBuilder(
                   stream: FirebaseFirestore.instance
-                      .collection('posts')
-                      .doc(widget.postId)
+                      .collection('polls')
+                      .doc(widget.pollId)
                       .collection('comments')
                       .doc(widget.snap['commentId'])
                       .collection('replies')
@@ -518,10 +700,8 @@ class _CommentCardState extends State<CommentCard> {
                         (snapshot.data as dynamic)?.docs.length ?? 0;
                     return repliesCount > 0
                         ? Padding(
-                            padding: const EdgeInsets.only(
-                              left: 64.0,
-                              bottom: 8,
-                            ),
+                            padding:
+                                const EdgeInsets.only(left: 64.0, bottom: 8),
                             child: Container(
                               child: InkWell(
                                 onTap: () async {
@@ -562,8 +742,8 @@ class _CommentCardState extends State<CommentCard> {
                 visible: _showCommentReplies,
                 child: StreamBuilder(
                   stream: FirebaseFirestore.instance
-                      .collection('posts')
-                      .doc(widget.postId)
+                      .collection('polls')
+                      .doc(widget.pollId)
                       .collection('comments')
                       .doc(widget.snap['commentId'])
                       .collection('replies')
@@ -576,7 +756,7 @@ class _CommentCardState extends State<CommentCard> {
                               commentReplies: commentReplies,
                               parentPost: widget.parentPost,
                               parentCommentId: widget.snap['commentId'],
-                              postId: widget.postId,
+                              pollId: widget.pollId,
                               parentSetState: widget.parentSetState,
                             )
                           : const Center(
@@ -590,7 +770,7 @@ class _CommentCardState extends State<CommentCard> {
                       commentReplies: commentReplies,
                       parentPost: widget.parentPost,
                       parentCommentId: widget.snap['commentId'],
-                      postId: widget.postId,
+                      pollId: widget.pollId,
                       parentSetState: widget.parentSetState,
                     );
                   },
@@ -642,20 +822,70 @@ class _CommentCardState extends State<CommentCard> {
                               top: 12,
                               left: 4,
                             ),
-                            child: CircleAvatar(
-                              backgroundColor:
-                                  Color.fromARGB(255, 227, 227, 227),
-                              backgroundImage: NetworkImage(
-                                user?.photoUrl ?? '',
-                              ),
-                              radius: widget.isReply ? 14 : 18,
+                            child: Stack(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor:
+                                      Color.fromARGB(255, 227, 227, 227),
+                                  backgroundImage: NetworkImage(
+                                    user?.photoUrl ?? '',
+                                  ),
+                                  radius: widget.isReply ? 16 : 20,
+                                ),
+                                Positioned(
+                                  bottom: 0,
+                                  right: widget.isReply ? 2 : 2.8,
+                                  child: Container(
+                                    child: Row(
+                                      children: [
+                                        _userProfile?.profileFlag == "true"
+                                            ? Container(
+                                                width: widget.isReply
+                                                    ? 13.5
+                                                    : 15.5,
+                                                height:
+                                                    widget.isReply ? 6.75 : 7.7,
+                                                child: Image.asset(
+                                                    'icons/flags/png/${user?.country}.png',
+                                                    package: 'country_icons'))
+                                            : Row()
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    child: Row(
+                                      children: [
+                                        _userProfile?.profileBadge == "true"
+                                            ? CircleAvatar(
+                                                radius: widget.isReply ? 5 : 6,
+                                                backgroundColor: Color.fromARGB(
+                                                    255, 245, 245, 245),
+                                                child: Container(
+                                                  child: Icon(Icons.verified,
+                                                      color: Color.fromARGB(
+                                                          255, 113, 191, 255),
+                                                      size: widget.isReply
+                                                          ? 10
+                                                          : 12),
+                                                ),
+                                              )
+                                            : Row()
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                         Expanded(
                           child: Padding(
                             padding: const EdgeInsets.only(
-                              left: 16,
+                              left: 10,
                               right: 8,
                             ),
                             child: Container(
@@ -690,6 +920,7 @@ class _CommentCardState extends State<CommentCard> {
                       InkWell(
                         onTap: () async {
                           await _stopReplying();
+                          print(widget.snap['commentId']);
                         },
                         child: Container(
                           decoration: BoxDecoration(),
@@ -707,15 +938,18 @@ class _CommentCardState extends State<CommentCard> {
                           performLoggedUserAction(
                               context: context,
                               action: () async {
-                                await FirestoreMethods().postReply(
-                                    widget.postId,
-                                    widget.snap['commentId'],
+                                await FirestoreMethods().pollReply(
+                                    widget.pollId,
+                                    widget.isReply
+                                        ? widget.parentCommentId
+                                        : widget.snap['commentId'],
                                     _replyController.text,
                                     user?.uid ?? '',
                                     user?.username ?? '',
                                     user?.photoUrl ?? '');
                                 setState(() {
                                   _replyController.text = "";
+                                  // print(widget.snap['commentId']);
                                 });
                               });
                         },
@@ -836,9 +1070,9 @@ class _CommentCardState extends State<CommentCard> {
 
 class ReplyList extends StatelessWidget {
   final commentReplies;
-  final Post? parentPost;
+  final Poll? parentPost;
   final String? parentCommentId;
-  final postId;
+  final pollId;
   final Function parentSetState;
 
   const ReplyList(
@@ -846,7 +1080,7 @@ class ReplyList extends StatelessWidget {
       this.commentReplies,
       this.parentPost,
       this.parentCommentId,
-      this.postId,
+      this.pollId,
       required this.parentSetState})
       : super(key: key);
 
@@ -858,15 +1092,32 @@ class ReplyList extends StatelessWidget {
           ...List.generate(commentReplies.length, (index) {
             var replySnap = commentReplies[index].data();
 
-            return CommentCard(
+            return CommentCardPoll(
               isReply: true,
               parentCommentId: parentCommentId,
               parentReplyId: replySnap['replyId'],
               snap: replySnap,
-              postId: postId,
-              minus: parentPost?.minus.contains(replySnap['uid']),
-              neutral: parentPost?.neutral.contains(replySnap['uid']),
-              plus: parentPost?.plus.contains(replySnap['uid']),
+              pollId: pollId,
+              option1: parentPost?.option1,
+              option2: parentPost?.option2,
+              option3: parentPost?.option3,
+              option4: parentPost?.option4,
+              option5: parentPost?.option5,
+              option6: parentPost?.option6,
+              option7: parentPost?.option7,
+              option8: parentPost?.option8,
+              option9: parentPost?.option9,
+              option10: parentPost?.option10,
+              vote1: parentPost?.vote1.contains(replySnap['uid']),
+              vote2: parentPost?.vote2.contains(replySnap['uid']),
+              vote3: parentPost?.vote3.contains(replySnap['uid']),
+              vote4: parentPost?.vote4.contains(replySnap['uid']),
+              vote5: parentPost?.vote5.contains(replySnap['uid']),
+              vote6: parentPost?.vote6.contains(replySnap['uid']),
+              vote7: parentPost?.vote7.contains(replySnap['uid']),
+              vote8: parentPost?.vote8.contains(replySnap['uid']),
+              vote9: parentPost?.vote9.contains(replySnap['uid']),
+              vote10: parentPost?.vote10.contains(replySnap['uid']),
               parentSetState: parentSetState,
             );
           })

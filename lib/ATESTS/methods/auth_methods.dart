@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user.dart' as model;
-import '../other/utils.dart.dart';
+import '../utils/utils.dart';
 import 'storage_methods.dart';
 
 class AuthMethods {
@@ -21,6 +21,12 @@ class AuthMethods {
     return model.User.fromSnap(snap);
   }
 
+  getUserProfileDetails(uid) async {
+    DocumentSnapshot snap = await _firestore.collection('users').doc(uid).get();
+
+    return model.User.fromSnap(snap);
+  }
+
 //sign up user
   Future<String> signUpUser({
     required String email,
@@ -30,7 +36,8 @@ class AuthMethods {
     // required Uint8List file,
     required Uint8List? profilePicFile,
     required String country,
-    required String isFT,
+    required String isVerified,
+    required String isPending,
   }) async {
     String res = "Some error occured";
     try {
@@ -56,19 +63,21 @@ class AuthMethods {
         //add user to our database
 
         model.User user = model.User(
-            username: username,
-            uid: cred.user!.uid,
-            // photoUrl: photoUrl,
-            dateCreated: DateTime.now(),
-            photoUrl: profilePicUrl,
-            email: email,
-            country: country,
-            isFT: isFT,
-            bio: trimmedBio,
-            profileFlag: 'false'
-            // followers: [],
-            // following: [],
-            );
+          username: username,
+          usernameLower: username.toLowerCase(),
+          uid: cred.user!.uid,
+          // photoUrl: photoUrl,
+          dateCreated: DateTime.now(),
+          photoUrl: profilePicUrl,
+          email: email,
+          country: country,
+          isPending: isPending,
+          bio: trimmedBio,
+          profileFlag: 'false',
+          profileBadge: 'false',
+          // followers: [],
+          // following: [],
+        );
 
         await _firestore.collection('users').doc(cred.user!.uid).set(
               user.toJson(),
@@ -158,7 +167,10 @@ class AuthMethods {
     try {
       User currentUser = _auth.currentUser!;
       await _firestore.collection('users').doc(currentUser.uid).update(
-        {'username': username},
+        {
+          'username': username,
+          'usernameLower': username.toLowerCase(),
+        },
       );
     } catch (err) {}
   }
@@ -174,7 +186,7 @@ class AuthMethods {
     } catch (err) {}
   }
 
-  Future<void> changeProfileFlag({
+  changeProfileFlag({
     required String profileFlag,
   }) async {
     try {
@@ -185,15 +197,45 @@ class AuthMethods {
     } catch (err) {}
   }
 
-  Future<void> changeProfilePic({
-    required Uint8List? profilePicFile,
+  changeProfileBadge({
+    required String profileBadge,
   }) async {
     try {
       User currentUser = _auth.currentUser!;
       await _firestore.collection('users').doc(currentUser.uid).update(
-        {'photoUrl': profilePicFile},
+        {'profileBadge': profileBadge},
       );
     } catch (err) {}
+  }
+
+  changeIsPending({
+    required String isPending,
+  }) async {
+    try {
+      User currentUser = _auth.currentUser!;
+      await _firestore.collection('users').doc(currentUser.uid).update(
+        {'isPending': isPending},
+      );
+    } catch (err) {}
+  }
+
+  Future<String> changeProfilePic({
+    required String? profilePhotoUrl,
+  }) async {
+    String res = "Some error ocurred";
+    try {
+      User currentUser = _auth.currentUser!;
+      await _firestore.collection('users').doc(currentUser.uid).update(
+        {'photoUrl': profilePhotoUrl},
+      );
+
+      res = "success";
+    } catch (e) {
+      print(
+        e.toString(),
+      );
+    }
+    return res;
   }
 
   Future<String> changeEmail({
@@ -227,7 +269,11 @@ class AuthMethods {
 
   Future<void> deleteUser(String uid) async {
     try {
+      final user = FirebaseAuth.instance.currentUser;
       await _firestore.collection('users').doc(uid).delete();
+      if (user != null) {
+        await user.delete();
+      }
     } catch (err) {
       print(err.toString());
     }

@@ -11,8 +11,9 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../methods/auth_methods.dart';
+import '../methods/storage_methods.dart';
 import '../models/user.dart';
-import '../other/utils.dart.dart';
+import '../utils/utils.dart';
 import '../provider/user_provider.dart';
 
 class EditProfile extends StatefulWidget {
@@ -30,7 +31,9 @@ class _EditProfileState extends State<EditProfile> {
   bool username = false;
   bool valueFlag = false;
   var selectFlag = false;
-  Uint8List? _image;
+  bool valueBadge = false;
+  var selectBadge = false;
+  String? _image;
   User? user;
 
   // UI
@@ -48,31 +51,58 @@ class _EditProfileState extends State<EditProfile> {
   void initState() {
     super.initState();
     getValueFlag();
+    getValueBadge();
   }
 
   void selectImage() async {
     Uint8List im = await pickImage(ImageSource.gallery);
     setState(() {
-      _image = im;
+      // _image = im;
+      isLoading = true;
+    });
+    String photoUrl =
+        await StorageMethods().uploadImageToStorage('profilePics', im, false);
+    if (photoUrl != null) {
+      await AuthMethods().changeProfilePic(profilePhotoUrl: photoUrl);
+      UserProvider userProvider = Provider.of(context, listen: false);
+      await userProvider.refreshUser();
+    }
+    showSnackBar('Profile picture uploaded.', context);
+    setState(() {
+      isLoading = false;
     });
   }
 
-  Future<void> getValueFlag() async {
+  getValueFlag() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       selectFlag = prefs.getBool('selected_displayFlag') ?? true;
     });
   }
 
-  Future<void> setValueFlag(bool valueFlag) async {
+  setValueFlag(bool valueFlag) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool('selected_displayFlag', valueFlag);
+  }
+
+  getValueBadge() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      selectBadge = prefs.getBool('selected_badge') ?? true;
+    });
+  }
+
+  setValueBadge(bool valueBadge) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool('selected_badge', valueBadge);
   }
 
   @override
   Widget build(BuildContext context) {
     user = Provider.of<UserProvider>(context).getUser;
     bool isSignedIn = user != null;
+    _image = user!.photoUrl;
+    print(_image);
 
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 245, 245, 245),
@@ -96,45 +126,111 @@ class _EditProfileState extends State<EditProfile> {
                         children: [
                           // Flexible(child: Container(), flex: 1),
                           Padding(
-                            padding:
-                                const EdgeInsets.only(bottom: 25.0, left: 8),
+                            padding: const EdgeInsets.only(
+                              bottom: 25.0,
+                            ),
                             child: Stack(
                               children: [
-                                _image != null
-                                    ? CircleAvatar(
-                                        radius: 64,
-                                        backgroundImage: MemoryImage(_image!),
-                                      )
-                                    : CircleAvatar(
-                                        radius: 64,
-                                        backgroundImage: NetworkImage(
-                                            'https://images.nightcafe.studio//assets/profile.png?tr=w-1600,c-at_max'),
-                                        backgroundColor: Colors.grey.shade200,
+                                // _image != null
 
-                                        // backgroundImage: NetworkImage(
-                                        //   'https://images.nightcafe.studio//assets/profile.png?tr=w-1600,c-at_max',
-                                        // ),
+                                Padding(
+                                    padding: const EdgeInsets.only(bottom: 5.0),
+                                    child: Center(
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.black,
+                                        ),
+                                        child: Opacity(
+                                          opacity: _image != null ? 0.7 : 1,
+                                          child: _image != null &&
+                                                  _image!.isNotEmpty
+                                              ? CircleAvatar(
+                                                  backgroundColor: Colors.black,
+                                                  radius: 64,
+                                                  // backgroundImage: MemoryImage(_image!),
+                                                  backgroundImage: NetworkImage(
+                                                    _image!,
+                                                  ),
+                                                )
+                                              : CircleAvatar(
+                                                  radius: 64,
+                                                  backgroundImage: AssetImage(
+                                                      'assets/avatarFT.jpg'),
+                                                  backgroundColor:
+                                                      Colors.grey.shade200,
+                                                ),
+                                        ),
                                       ),
+                                    )
+
+                                    // backgroundImage: NetworkImage(
+                                    //   'https://images.nightcafe.studio//assets/profile.png?tr=w-1600,c-at_max',
+                                    // ),
+                                    ),
                                 Positioned(
-                                  bottom: -10,
-                                  left: 80,
-                                  child: IconButton(
-                                    onPressed: selectImage,
-                                    icon: const Icon(
-                                      Icons.add_a_photo,
+                                  // bottom: 0,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                        top: 35.0, right: 11),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          child: Container(),
+                                        ),
+                                        IconButton(
+                                          onPressed: selectImage,
+                                          icon: Icon(
+                                            Icons.add_a_photo,
+                                            color: Colors.white.withOpacity(
+                                                _image != null ? 0.55 : 0.8),
+                                            size: 40,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Container(),
+                                        )
+                                      ],
                                     ),
                                   ),
-                                )
+                                ),
+                                user != null &&
+                                        selectFlag != false &&
+                                        user?.country != ""
+                                    ? Positioned(
+                                        bottom: 5,
+                                        right: 134,
+                                        child: Container(
+                                          width: 40,
+                                          height: 20,
+                                          child: Image.asset(
+                                              'icons/flags/png/${user?.country}.png',
+                                              package: 'country_icons'),
+                                        ),
+                                      )
+                                    : Container(),
+                                user != null && user?.profileBadge != "false"
+                                    ? Positioned(
+                                        bottom: 7,
+                                        right: 122,
+                                        child: CircleAvatar(
+                                          radius: 16,
+                                          backgroundColor: Color.fromARGB(
+                                              255, 245, 245, 245),
+                                          child: Container(
+                                            child: Icon(Icons.verified,
+                                                color: Color.fromARGB(
+                                                    255, 113, 191, 255),
+                                                size: 31),
+                                          ),
+                                        ),
+                                      )
+                                    : Container(),
                               ],
                             ),
                           ),
-
-                          // ElevatedButton(
-                          //     child: Text('save'),
-                          //     onPressed: () async {
-                          //       await AuthMethods()
-                          //           .changeProfilePic(profilePicFile: _image);
-                          //     }),
                           Padding(
                             padding: const EdgeInsets.only(
                                 right: 12.0, left: 12, bottom: 0),
@@ -151,90 +247,205 @@ class _EditProfileState extends State<EditProfile> {
                                 padding: const EdgeInsets.only(bottom: 8.0),
                                 child: Column(
                                   children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                          left: 20.0, top: 6, right: 5),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Row(
+                                    user?.country != ""
+                                        ? Column(
                                             children: [
-                                              Text(
-                                                'Display National Flag',
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: selectFlag != false
-                                                      ? Colors.black
-                                                      : Colors.grey,
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    left: 20.0,
+                                                    top: 6,
+                                                    right: 5),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Row(
+                                                      children: [
+                                                        Text(
+                                                          'Display National Flag',
+                                                          style: TextStyle(
+                                                            fontSize: 14,
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                            color: selectFlag !=
+                                                                    false
+                                                                ? Colors.black
+                                                                : Colors.grey,
+                                                          ),
+                                                        ),
+                                                        // Container(width: 8),
+                                                      ],
+                                                    ),
+                                                    Switch(
+                                                      value: selectFlag,
+                                                      activeColor: Colors.black,
+                                                      onChanged: (valueFlag) {
+                                                        selectFlag == false
+                                                            ? setState(() {
+                                                                setValueFlag(
+                                                                    true);
+                                                                selectFlag =
+                                                                    true;
+                                                                valueFlag =
+                                                                    true;
+                                                                setValueBadge(
+                                                                    false);
+                                                                selectBadge =
+                                                                    false;
+                                                                valueBadge =
+                                                                    false;
+
+                                                                AuthMethods()
+                                                                    .changeProfileFlag(
+                                                                        profileFlag:
+                                                                            'true');
+                                                                AuthMethods()
+                                                                    .changeProfileBadge(
+                                                                        profileBadge:
+                                                                            'false');
+                                                                UserProvider
+                                                                    userProvider =
+                                                                    Provider.of(
+                                                                        context,
+                                                                        listen:
+                                                                            false);
+                                                                userProvider
+                                                                    .refreshUser();
+                                                              })
+                                                            : selectFlag == true
+                                                                ? setState(() {
+                                                                    setValueFlag(
+                                                                        false);
+                                                                    selectFlag =
+                                                                        false;
+                                                                    valueFlag =
+                                                                        false;
+
+                                                                    AuthMethods().changeProfileFlag(
+                                                                        profileFlag:
+                                                                            'false');
+
+                                                                    UserProvider
+                                                                        userProvider =
+                                                                        Provider.of(
+                                                                            context,
+                                                                            listen:
+                                                                                false);
+                                                                    userProvider
+                                                                        .refreshUser();
+                                                                  })
+                                                                : null;
+                                                      },
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
-                                              Container(width: 8),
-                                              user != null &&
-                                                      selectFlag != false &&
-                                                      user?.country != ""
-                                                  ? Container(
-                                                      width: 24,
-                                                      height: 14,
-                                                      child: Image.asset(
-                                                          'icons/flags/png/${user?.country}.png',
-                                                          package:
-                                                              'country_icons'),
-                                                    )
-                                                  : Container(),
+                                              Column(
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            left: 20.0,
+                                                            top: 6,
+                                                            right: 5),
+                                                    child: Column(
+                                                      children: [
+                                                        Row(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .spaceBetween,
+                                                          children: [
+                                                            Row(
+                                                              children: [
+                                                                Text(
+                                                                  'Display Verified Badge',
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize:
+                                                                        14,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w500,
+                                                                    color: selectBadge !=
+                                                                            false
+                                                                        ? Colors
+                                                                            .black
+                                                                        : Colors
+                                                                            .grey,
+                                                                  ),
+                                                                ),
+                                                                // Container(width: 8),
+                                                              ],
+                                                            ),
+                                                            Switch(
+                                                              value:
+                                                                  selectBadge,
+                                                              activeColor:
+                                                                  Colors.black,
+                                                              onChanged:
+                                                                  (valueFlag) {
+                                                                selectBadge ==
+                                                                        false
+                                                                    ? setState(
+                                                                        () {
+                                                                        setValueBadge(
+                                                                            true);
+                                                                        selectBadge =
+                                                                            true;
+                                                                        valueBadge =
+                                                                            true;
+                                                                        setValueFlag(
+                                                                            false);
+                                                                        selectFlag =
+                                                                            false;
+                                                                        valueFlag =
+                                                                            false;
+
+                                                                        AuthMethods().changeProfileBadge(
+                                                                            profileBadge:
+                                                                                'true');
+                                                                        AuthMethods().changeProfileFlag(
+                                                                            profileFlag:
+                                                                                'false');
+                                                                        UserProvider
+                                                                            userProvider =
+                                                                            Provider.of(context,
+                                                                                listen: false);
+                                                                        userProvider
+                                                                            .refreshUser();
+                                                                      })
+                                                                    : selectBadge ==
+                                                                            true
+                                                                        ? setState(
+                                                                            () {
+                                                                            setValueBadge(false);
+                                                                            selectBadge =
+                                                                                false;
+
+                                                                            valueBadge =
+                                                                                false;
+
+                                                                            AuthMethods().changeProfileBadge(profileBadge: 'false');
+
+                                                                            UserProvider
+                                                                                userProvider =
+                                                                                Provider.of(context, listen: false);
+                                                                            userProvider.refreshUser();
+                                                                          })
+                                                                        : null;
+                                                              },
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ],
-                                          ),
-                                          Switch(
-                                            value: selectFlag,
-                                            activeColor: Colors.black,
-                                            onChanged: (valueFlag) {
-                                              selectFlag == false
-                                                  ? setState(() {
-                                                      setValueFlag(true);
-                                                      selectFlag = true;
-                                                      valueFlag = true;
-                                                      setState(() async {
-                                                        await AuthMethods()
-                                                            .changeProfileFlag(
-                                                                profileFlag:
-                                                                    'true');
-                                                        UserProvider
-                                                            userProvider =
-                                                            Provider.of(context,
-                                                                listen: false);
-                                                        await userProvider
-                                                            .refreshUser();
-                                                      });
-                                                    })
-                                                  : selectFlag == true
-                                                      ? setState(() {
-                                                          setValueFlag(false);
-                                                          selectFlag = false;
-
-                                                          valueFlag = false;
-                                                          setState(() async {
-                                                            await AuthMethods()
-                                                                .changeProfileFlag(
-                                                                    profileFlag:
-                                                                        'false');
-
-                                                            UserProvider
-                                                                userProvider =
-                                                                Provider.of(
-                                                                    context,
-                                                                    listen:
-                                                                        false);
-                                                            await userProvider
-                                                                .refreshUser();
-                                                          });
-                                                        })
-                                                      : null;
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                          )
+                                        : Row(),
                                     Padding(
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 4.0,
@@ -535,11 +746,7 @@ class UserFieldListTile extends StatelessWidget {
                               ),
                               fillColor: Color.fromARGB(255, 245, 245, 245),
                               filled: true,
-                            )
-                            // hintText: 'Enter new username',
-                            // textInputType: TextInputType.text,
-                            // textEditingController: textController,
-                            ),
+                            )),
                       ),
                       // Container(width: 10),
                       Column(
@@ -570,39 +777,6 @@ class UserFieldListTile extends StatelessWidget {
                             ),
                             onTap: onCancelEdit,
                           ),
-                          // InkWell(
-                          //   onTap: onSave,
-                          //   child: Container(
-                          //     height: 25,
-                          //     alignment: Alignment.center,
-                          //     child: Text(
-                          //       'SAVE',
-                          //       style: TextStyle(
-                          //         color: Colors.blue,
-                          //         letterSpacing: 0,
-                          //         fontSize: 14,
-                          //         fontWeight: FontWeight.w500,
-                          //       ),
-                          //     ),
-                          //   ),
-                          // ),
-                          // InkWell(
-                          //   onTap: onCancelEdit,
-                          //   child: Container(
-                          //     height: 25,
-                          //     alignment: Alignment.center,
-                          //     child: Text(
-                          //       "CANCEL",
-                          //       style: TextStyle(
-                          //         color: Color.fromARGB(255, 121, 121, 121),
-                          //         fontSize: 14,
-                          //         letterSpacing: 0,
-
-                          //         // fontWeight: FontWeight.w500,
-                          //       ),
-                          //     ),
-                          //   ),
-                          // ),
                         ],
                       ),
                     ],

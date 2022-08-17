@@ -9,13 +9,13 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 // import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
-import '../feeds/comment_card.dart';
+import '../zFeeds/comment_card.dart';
 import '../methods/firestore_methods.dart';
 
 import '../models/post.dart';
 
 import '../models/user.dart';
-import '../other/utils.dart.dart';
+import '../utils/utils.dart';
 import '../provider/user_provider.dart';
 
 import 'full_image_screen.dart';

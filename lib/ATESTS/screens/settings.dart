@@ -5,9 +5,10 @@ import 'package:provider/provider.dart';
 import '../authentication/signup.dart';
 import '../methods/auth_methods.dart';
 import '../models/user.dart';
-import '../other/utils.dart.dart';
+import '../utils/utils.dart';
 import '../provider/user_provider.dart';
 import 'blocked_list.dart';
+import 'send_photo_1.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -17,31 +18,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // var userData = {};
-
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   getData();
-  // }
-
-  // getData() async {
-  //   try {
-  //     // var snap = await FirebaseFirestore.instance
-  //     //     .collection('users')
-  //     //     .doc(widget.uid)
-  //     //     .get();
-  //     var postSnap = await FirebaseFirestore.instance.collection('posts').where('uid', isEqualTo: _post.uid)
-  //     // userData = snap.data()!;
-  //     setState(() {});
-  //   } catch (e) {
-  //     // showSnackBar(cont
-  //     //   // context,
-  //     //   // e.toString(),
-  //     // );
-  //   }
-  // }
-
   _contactInfo(BuildContext context) async {
     return showDialog(
       context: context,
@@ -231,7 +207,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     color: Colors.white,
                                     child: InkWell(
                                       splashColor: Colors.grey.withOpacity(0.5),
-                                      onTap: () {},
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  SendPhoto()),
+                                        );
+                                      },
                                       child: Padding(
                                         padding: const EdgeInsets.only(
                                             left: 32, top: 19, bottom: 19),
@@ -241,7 +224,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                             Container(width: 15),
                                             Container(
                                               child: Text(
-                                                'Language',
+                                                'Send Photo Test',
                                                 style: const TextStyle(
                                                     fontSize: 16.5),
                                               ),
@@ -533,61 +516,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           ),
                                         ),
                                       ),
-                                      // Container(
-                                      //   decoration: BoxDecoration(
-                                      //       // border: Border(
-                                      //       //     bottom: BorderSide(width: 0, color: Colors.black),
-                                      //       //     top: BorderSide(width: 0, color: Colors.black))),
-                                      //       ),
-                                      //   width:
-                                      //       MediaQuery.of(context).size.width *
-                                      //           1,
-                                      //   child: Material(
-                                      //     color: Colors.white,
-                                      //     child: InkWell(
-                                      //       onTap: () {
-                                      //         Future.delayed(
-                                      //             const Duration(
-                                      //                 milliseconds: 150), () {
-                                      //           Navigator.of(context).push(
-                                      //             MaterialPageRoute(
-                                      //                 builder: (context) =>
-                                      //                     VerifyOne()),
-                                      //           );
-                                      //         });
-                                      //       },
-                                      //       child: isUserLoggedIn
-                                      //           ? Row()
-                                      //           : Container(
-                                      //               child: Padding(
-                                      //                 padding:
-                                      //                     const EdgeInsets.only(
-                                      //                         left: 32,
-                                      //                         top: 19,
-                                      //                         bottom: 19),
-                                      //                 child: Row(
-                                      //                   children: [
-                                      //                     Icon(
-                                      //                         Icons
-                                      //                             .verified_user_outlined,
-                                      //                         size: 23),
-                                      //                     Container(width: 15),
-                                      //                     Container(
-                                      //                       child: Text(
-                                      //                         'Sign Up',
-                                      //                         style:
-                                      //                             const TextStyle(
-                                      //                                 fontSize:
-                                      //                                     16.5),
-                                      //                       ),
-                                      //                     ),
-                                      //                   ],
-                                      //                 ),
-                                      //               ),
-                                      //             ),
-                                      //     ),
-                                      //   ),
-                                      // ),
                                       Container(
                                         width:
                                             MediaQuery.of(context).size.width *
@@ -1141,7 +1069,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           child: InkWell(
                                             splashColor:
                                                 Colors.grey.withOpacity(0.5),
-                                            onTap: () {},
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        SendPhoto()),
+                                              );
+                                            },
                                             child: Padding(
                                               padding: const EdgeInsets.only(
                                                   left: 32,
@@ -1154,7 +1089,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                                   Container(width: 15),
                                                   Container(
                                                     child: Text(
-                                                      'Language',
+                                                      'Send Photo Test',
                                                       style: const TextStyle(
                                                           fontSize: 16.5),
                                                     ),

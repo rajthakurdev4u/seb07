@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../methods/firestore_methods.dart';
 import '../models/user.dart';
-import '../other/utils.dart.dart';
-import '../poll/poll_view.dart.dart';
+import '../utils/utils.dart';
+import '../poll/poll_view.dart';
 import '../provider/user_provider.dart';
 import '../screens/full_message.dart';
 import '../screens/full_message_poll.dart';
@@ -51,6 +51,38 @@ class _PollCardState extends State<PollCard> {
     super.initState();
     _poll = widget.poll;
     placement = '#${(widget.indexPlacement + 1).toString()}';
+  }
+
+  _openDialog(BuildContext context) async {
+    return showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: Container(
+          // width: double.infinity,
+          width: MediaQuery.of(context).size.width * 0.85,
+          height: 313,
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25), color: Colors.white),
+          padding: EdgeInsets.fromLTRB(30, 45, 30, 0),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(
+                  top: 16.0,
+                  bottom: 14,
+                ),
+                child: Text('Test',
+                    textAlign: TextAlign.center,
+                    style:
+                        TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   _otherUsers(BuildContext context) async {
@@ -431,8 +463,10 @@ class _PollCardState extends State<PollCard> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.only(left: 0.0),
+                            InkWell(
+                              onTap: () {
+                                _openDialog(context);
+                              },
                               child: Text(placement,
                                   style: TextStyle(
                                       color: Colors.black,

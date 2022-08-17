@@ -7,7 +7,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../other/utils.dart.dart';
+import '../utils/utils.dart';
 import 'camera_loader.dart';
 
 enum CameraFileType { image, video }
@@ -82,7 +82,9 @@ class CameraScreenState extends State<CameraScreen> {
                       },
                     ),
                     Text(
-                      _captureImage == true && widget.add == "true"
+                      _captureImage == true && widget.add == "true" ||
+                              _captureImage == true && widget.add == "1" ||
+                              _captureImage == true && widget.add == "2"
                           ? 'Take a picture'
                           : "Record a video",
                       style: TextStyle(
@@ -202,7 +204,9 @@ class CameraScreenState extends State<CameraScreen> {
                                     },
                                   ),
                                 ),
-                                widget.add == "true"
+                                widget.add == "true" ||
+                                        widget.add == "1" ||
+                                        widget.add == "2"
                                     ? Expanded(
                                         child: Align(
                                           alignment: Alignment.centerRight,
@@ -260,7 +264,6 @@ class CameraScreenState extends State<CameraScreen> {
       selectedCamera,
       ResolutionPreset.max,
     );
-
     _initializeControllerFuture = controller.initialize();
     _isCapturingStreamController.sink.add(false);
   }
@@ -277,6 +280,8 @@ class CameraScreenState extends State<CameraScreen> {
     try {
       // Ensure that the camera is initialized.
       await _initializeControllerFuture;
+
+      controller.setFlashMode(FlashMode.off);
 
       // Attempt to take a picture and get the file `image`
       // where it was saved.

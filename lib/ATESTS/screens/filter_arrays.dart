@@ -5,12 +5,6 @@ final List<String> one = [
   'Most Recent',
 ];
 
-final List<String> onei = [
-  'Highest Score',
-  'Most Voted',
-  'Gaining Mome',
-];
-
 final List<String> two = [
   '1',
   '2',

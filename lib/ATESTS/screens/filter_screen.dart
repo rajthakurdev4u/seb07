@@ -141,13 +141,13 @@ class _CountriesState extends State<Countries> {
             automaticallyImplyLeading: false,
             toolbarHeight: 80,
             actions: [
-              Container(
+              SizedBox(
                 width: MediaQuery.of(context).size.width,
                 child: Column(
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: Container(
+                      child: SizedBox(
                         height: 50,
                         child: PhysicalModel(
                           color: Colors.white,
@@ -171,7 +171,7 @@ class _CountriesState extends State<Countries> {
                                   Container(
                                     width: 10,
                                   ),
-                                  Center(
+                                  const Center(
                                     child: Text('Filter',
                                         style: TextStyle(
                                             fontSize: 22,
@@ -186,18 +186,27 @@ class _CountriesState extends State<Countries> {
                                     top: 8.0, right: 14, left: 8, bottom: 8),
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: Color.fromARGB(255, 243, 243, 243),
+                                    color: const Color.fromARGB(
+                                        255, 243, 243, 243),
                                     border: Border.all(
                                       width: 0,
-                                      color: Color.fromARGB(255, 173, 173, 173),
+                                      color: const Color.fromARGB(
+                                          255, 173, 173, 173),
                                     ),
-                                    borderRadius: BorderRadius.all(
+                                    borderRadius: const BorderRadius.all(
                                       Radius.circular(25.0),
                                     ),
                                   ),
                                   width: 200,
                                   height: 50,
                                   child: Theme(
+                                    data: ThemeData(
+                                      colorScheme:
+                                          ThemeData().colorScheme.copyWith(
+                                                primary: const Color.fromARGB(
+                                                    255, 131, 135, 138),
+                                              ),
+                                    ),
                                     child: TextField(
                                       onEditingComplete: () {
                                         print('complete');
@@ -221,26 +230,19 @@ class _CountriesState extends State<Countries> {
                                                 : Colors.black,
                                             size: 20),
                                         hintText: "Search Countries",
-                                        labelStyle: TextStyle(
+                                        labelStyle: const TextStyle(
                                           color: Colors.grey,
                                           fontStyle: FontStyle.normal,
                                         ),
-                                        hintStyle: TextStyle(
+                                        hintStyle: const TextStyle(
                                           color: Colors.grey,
                                           fontStyle: FontStyle.italic,
                                         ),
                                         border: InputBorder.none,
-                                        contentPadding: EdgeInsets.only(
+                                        contentPadding: const EdgeInsets.only(
                                           top: 0,
                                         ),
                                       ),
-                                    ),
-                                    data: ThemeData(
-                                      colorScheme:
-                                          ThemeData().colorScheme.copyWith(
-                                                primary: Color.fromARGB(
-                                                    255, 131, 135, 138),
-                                              ),
                                     ),
                                   ),
                                 ),
@@ -256,9 +258,22 @@ class _CountriesState extends State<Countries> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
+                        SizedBox(
                           width: MediaQuery.of(context).size.width / 3,
-                          child: Center(
+                          child: const Center(
+                            child: Text(
+                              '-',
+                              style: TextStyle(
+                                  fontSize: 13.8,
+                                  letterSpacing: 0.5,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w400),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width / 3,
+                          child: const Center(
                             child: Text('-',
                                 style: TextStyle(
                                     fontSize: 13.8,
@@ -267,20 +282,9 @@ class _CountriesState extends State<Countries> {
                                     fontWeight: FontWeight.w400)),
                           ),
                         ),
-                        Container(
+                        SizedBox(
                           width: MediaQuery.of(context).size.width / 3,
-                          child: Center(
-                            child: Text('-',
-                                style: TextStyle(
-                                    fontSize: 13.8,
-                                    letterSpacing: 0.5,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.w400)),
-                          ),
-                        ),
-                        Container(
-                          width: MediaQuery.of(context).size.width / 3,
-                          child: Center(
+                          child: const Center(
                             child: Text('Countries',
                                 style: TextStyle(
                                     fontSize: 13.8,
@@ -307,7 +311,7 @@ class _CountriesState extends State<Countries> {
                     separatorBuilder: (_, __) => const SizedBox(height: 8),
                     itemBuilder: (context, index) => NoRadioListTile<String>(
                         value: one[index],
-                        groupValue: idk != 'false' ? oneValue : 'Highest Score',
+                        groupValue: oneValue,
                         leading: one[index],
                         miscDays: false,
                         onChanged: (value) {
@@ -329,19 +333,19 @@ class _CountriesState extends State<Countries> {
                       leading: two[index],
                       miscDays: true,
                       onChanged: (valueo) {
-                        two[index] == '7'
-                            ? setState(
-                                () {
-                                  idk = 'true';
-                                },
-                              )
-                            : two[index] == '7'
-                                ? setState(
-                                    () {
-                                      idk = 'false';
-                                    },
-                                  )
-                                : null;
+                        // two[index] == '7'
+                        //     ? setState(
+                        //         () {
+                        //           idk = 'true';
+                        //         },
+                        //       )
+                        //     : two[index] == '7'
+                        //         ? setState(
+                        //             () {
+                        //               idk = 'false';
+                        //             },
+                        //           )
+                        //         : null;
                         setValueOne(valueo.toString());
                       },
                     ),
@@ -354,20 +358,10 @@ class _CountriesState extends State<Countries> {
                     controller: ScrollController(),
                     separatorBuilder: (_, __) => const SizedBox(height: 8),
                     itemBuilder: (context, index) => MyRadioListTile(
-                        selectedIndex: selectedCountryIndex,
-                        index: long.indexOf(filtedlist[index]),
-                        onChanged: (value) => setValue(value)),
-
-                    // itemBuilder: (context, index) => NoRadioListTile<String>(
-                    //   value: filtedlist[index],
-                    //   groupValue: threeValue,
-                    //   title: filtedlist[index],
-                    //   countries: false,
-                    //   weight: true,
-                    //   onChanged: (valuet) {
-                    //     setValueTwo(valuet.toString());
-                    //   },
-                    // ),
+                      selectedIndex: selectedCountryIndex,
+                      index: long.indexOf(filtedlist[index]),
+                      onChanged: (value) => setValue(value),
+                    ),
                   ),
                 ),
               ],
@@ -418,12 +412,13 @@ class _NoRadioListTileState<T> extends State<NoRadioListTile<T>> {
         print(widget.leading.toString());
         print(widget.miscDays);
       },
-      child: Container(
+      child: SizedBox(
         height: 41,
         child: Container(
           decoration: BoxDecoration(
-              color:
-                  isSelected ? Colors.grey : Color.fromARGB(255, 240, 240, 240),
+              color: isSelected
+                  ? Colors.grey
+                  : const Color.fromARGB(255, 240, 240, 240),
               borderRadius: BorderRadius.circular(5),
               border: Border.all(
                   width: 0.2, color: isSelected ? Colors.black : Colors.grey)),
@@ -449,7 +444,7 @@ class _NoRadioListTileState<T> extends State<NoRadioListTile<T>> {
               ),
               const SizedBox(width: 4),
               Center(
-                child: Container(
+                child: SizedBox(
                   width: widget.miscDays
                       ? MediaQuery.of(context).size.width / 3 - 60
                       : MediaQuery.of(context).size.width / 3 - 60,
@@ -487,9 +482,10 @@ class MyRadioListTile extends StatelessWidget {
   final ValueChanged<int> onChanged;
 
   const MyRadioListTile({
-    required this.onChanged,
+    super.key,
     required this.selectedIndex,
     required this.index,
+    required this.onChanged,
   });
 
   @override
@@ -497,57 +493,53 @@ class MyRadioListTile extends StatelessWidget {
     String flag = short[index];
     return InkWell(
       onTap: () => onChanged(index),
-      child: Container(
+      child: SizedBox(
         height: 41,
-        // decoration: BoxDecoration(border: Border.all(width: 0)),
-        child: Container(
-          child: InkWell(
-            onTap: () => onChanged(index),
+        child: InkWell(
+          onTap: () => onChanged(index),
+          child: SizedBox(
+            height: 41,
             child: Container(
-              height: 41,
-              child: Container(
-                width: 200,
-                padding: EdgeInsets.only(left: 4),
-                decoration: BoxDecoration(
-                    color: index == selectedIndex
-                        ? Colors.grey
-                        : Color.fromARGB(255, 240, 240, 240),
-                    borderRadius: BorderRadius.circular(5),
-                    border: Border.all(
-                        width: 0.2,
-                        color: index == selectedIndex
-                            ? Colors.black
-                            : Colors.grey)),
-                child: Row(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 3.0, right: 2),
-                      child: Container(
-                        width: 25,
-                        height: 15,
-                        child: Image.asset('icons/flags/png/${flag}.png',
-                            package: 'country_icons'),
-                      ),
+              width: 200,
+              padding: const EdgeInsets.only(left: 4),
+              decoration: BoxDecoration(
+                color: index == selectedIndex
+                    ? Colors.grey
+                    : const Color.fromARGB(255, 240, 240, 240),
+                borderRadius: BorderRadius.circular(5),
+                border: Border.all(
+                    width: 0.2,
+                    color: index == selectedIndex ? Colors.black : Colors.grey),
+              ),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 3.0, right: 2),
+                    child: SizedBox(
+                      width: 25,
+                      height: 15,
+                      child: Image.asset('icons/flags/png/${flag}.png',
+                          package: 'country_icons'),
                     ),
-                    Center(
-                      child: Container(
-                        // color: Colors.blue,
-                        width: MediaQuery.of(context).size.width / 3 - 50,
-                        child: Text(
-                          long[index],
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: index == selectedIndex
-                                ? Colors.white
-                                : Colors.grey[600]!,
-                            // fontSize: isSelected ? 10 : 10,
-                            fontSize: 10,
-                          ),
+                  ),
+                  Center(
+                    child: SizedBox(
+                      // color: Colors.blue,
+                      width: MediaQuery.of(context).size.width / 3 - 50,
+                      child: Text(
+                        long[index],
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: index == selectedIndex
+                              ? Colors.white
+                              : Colors.grey[600]!,
+                          // fontSize: isSelected ? 10 : 10,
+                          fontSize: 10,
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

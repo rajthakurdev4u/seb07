@@ -7,25 +7,30 @@ class User {
   final String uid;
   final String? photoUrl;
   final String username;
-  final String country;
-  final String isFT;
+  String country;
+
+  final String isPending;
   final String bio;
   final dateCreated;
   final profileFlag;
+  final profileBadge;
+  final String usernameLower;
 
   // final List followers;
   // final List following;
 
-  const User({
+  User({
     required this.email,
     required this.uid,
     required this.photoUrl,
     required this.username,
     required this.country,
-    required this.isFT,
     required this.bio,
     required this.dateCreated,
     required this.profileFlag,
+    required this.isPending,
+    required this.usernameLower,
+    required this.profileBadge,
 
     // required this.followers,
     // required this.following,
@@ -40,10 +45,13 @@ class User {
         // "following": following,
         "photoUrl": photoUrl,
         "country": country,
-        "isFT": isFT,
+
+        "isPending": isPending,
         "bio": bio,
         "dateCreated": dateCreated,
         "profileFlag": profileFlag,
+        "profileBadge": profileBadge,
+        "usernameLower": usernameLower,
       };
 
   static User fromSnap(DocumentSnapshot snap) {
@@ -55,10 +63,12 @@ class User {
       photoUrl: snapshot['photoUrl'],
       email: snapshot['email'],
       country: snapshot['country'],
-      isFT: snapshot['isFT'],
+      isPending: snapshot['isPending'],
       bio: snapshot['bio'],
       dateCreated: snapshot['dateCreated'],
       profileFlag: snapshot['profileFlag'],
+      profileBadge: snapshot['profileBadge'],
+      usernameLower: snap['usernameLower'],
       // followers: snapshot['followers'],
       // following: snapshot['following'],
     );

@@ -1,35 +1,46 @@
 import 'dart:async';
 import 'dart:typed_data';
+
 import 'package:aft/ATESTS/screens/profile_screen_edit.dart';
 import 'package:aft/ATESTS/screens/report_user_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'package:flutter/src/foundation/key.dart';
+import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/rxdart.dart';
-// import 'package:provider/provider.dart';
-import '../methods/auth_methods.dart';
-import '../models/postPoll.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../provider/user_provider.dart';
+import '../utils/utils.dart';
 import '../zFeeds/message_card.dart';
 import '../zFeeds/poll_card.dart';
+
 import '../models/poll.dart';
 import '../models/post.dart';
+import '../models/postPoll.dart';
 import '../models/user.dart';
-import '../utils/utils.dart';
-import '../provider/user_provider.dart';
+
+import '../methods/auth_methods.dart';
+
 import 'full_image_profile.dart';
 
-class Profile extends StatefulWidget {
-  final Post post;
-  const Profile({Key? key, required this.post}) : super(key: key);
+class ProfilePoll extends StatefulWidget {
+  final Poll poll;
+  const ProfilePoll({Key? key, required this.poll}) : super(key: key);
 
   @override
-  State<Profile> createState() => _ProfileState();
+  State<ProfilePoll> createState() => _ProfilePollState();
 }
 
-class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
+class _ProfilePollState extends State<ProfilePoll>
+    with SingleTickerProviderStateMixin {
   final AuthMethods _authMethods = AuthMethods();
-  late Post _post;
+  late Poll _poll;
   Uint8List? _image;
   int commentLen = 0;
   int _selectedIndex = 0;
@@ -42,105 +53,10 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
   List<dynamic> pollList = [];
   StreamSubscription? loadDataStream;
 
-  // initList(index) async {
-  //   if (loadDataStream != null) {
-  //     loadDataStream!.cancel();
-  //     pollList = [];
-  //     postList = [];
-  //   }
-  //   if (index == 0) {
-  //     loadDataStream = FirebaseFirestore.instance
-  //         .collection('posts')
-  //         .where('uid', isEqualTo: _post.uid)
-  //         .orderBy('score', descending: true)
-  //         .snapshots()
-  //         .listen((event) {
-  //       print("aaaaaaaaaaaaaaaaaaaaaaaa");
-  //       if (postList.isEmpty) {
-  //         event.docChanges.forEach((change) {
-  //           postList.add(change.doc.data()!);
-  //         });
-  //       } else {
-  //         for (var change in event.docChanges) {
-  //           switch (change.type) {
-  //             case DocumentChangeType.added:
-  //               postList.add({
-  //                 ...change.doc.data()!,
-  //               });
-  //               break;
-  //             case DocumentChangeType.modified:
-  //               int i = postList.indexWhere((element) =>
-  //                   element["postId"] == change.doc.data()!["postId"]);
-  //               postList[i] = change.doc.data();
-  //               break;
-  //             case DocumentChangeType.removed:
-  //               postList.remove({...change.doc.data()!});
-  //               break;
-  //           }
-  //         }
-  //       }
-  //       setState(() {});
-  //     });
-  //   } else if (index == 1) {
-  //     loadDataStream = FirebaseFirestore.instance
-  //         .collection('polls')
-  //         .where('uid', isEqualTo: _post.uid)
-  //         .orderBy('totalVotes', descending: true)
-  //         .snapshots()
-  //         .listen((event) {
-  //       print(event.docs.length);
-  //       print("bbbbbbbbbbbbbbbbbbbbbbbbb");
-  //       if (pollList.isEmpty) {
-  //         event.docChanges.forEach((change) {
-  //           pollList.add(change.doc.data()!);
-  //         });
-  //         setState(() {});
-  //       } else {
-  //         for (var change in event.docChanges) {
-  //           switch (change.type) {
-  //             case DocumentChangeType.added:
-  //               pollList.add({
-  //                 ...change.doc.data()!,
-  //               });
-  //               break;
-  //             case DocumentChangeType.modified:
-  //               int i = pollList.indexWhere((element) =>
-  //                   element["pollId"] == change.doc.data()!["pollId"]);
-  //               pollList[i] = change.doc.data();
-  //               break;
-  //             case DocumentChangeType.removed:
-  //               pollList.remove({...change.doc.data()!});
-  //               break;
-  //           }
-  //         }
-  //         setState(() {});
-  //       }
-  //       setState(() {});
-  //     });
-  //   }
-  // }
-
-  // void getComments() async {
-  //   try {
-  //     QuerySnapshot snap = await FirebaseFirestore.instance
-  //         .collection('posts')
-
-  //         // .where('uid', isEqualTo: _post.uid)
-  //         .get();
-
-  //     setState(() {
-  //       commentLen = snap.docs.length;
-  //     });
-  //   } catch (e) {
-  //     showSnackBar(e.toString(), context);
-  //   }
-  //   setState(() {});
-  // }
-
   @override
   void initState() {
     super.initState();
-    _post = widget.post;
+    _poll = widget.poll;
     initTabController();
     getUserDetails();
     // initList(0);
@@ -163,7 +79,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
   }
 
   getUserDetails() async {
-    User userProfile = await _authMethods.getUserProfileDetails(_post.uid);
+    User userProfile = await _authMethods.getUserProfileDetails(_poll.uid);
     setState(() {
       _userProfile = userProfile;
     });
@@ -275,21 +191,21 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                             }),
                                         // Container(width: 8),
                                         Text(
-                                          _post.username,
+                                          _poll.username,
                                           style: TextStyle(
-                                            fontSize: _post.username.length ==
+                                            fontSize: _poll.username.length ==
                                                     16
                                                 ? 15
-                                                : _post.username.length == 15
+                                                : _poll.username.length == 15
                                                     ? 16
-                                                    : _post.username.length ==
+                                                    : _poll.username.length ==
                                                             14
                                                         ? 17
-                                                        : _post.username
+                                                        : _poll.username
                                                                     .length ==
                                                                 13
                                                             ? 18
-                                                            : _post.username
+                                                            : _poll.username
                                                                         .length ==
                                                                     12
                                                                 ? 19
@@ -300,12 +216,12 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                         ),
                                         IconButton(
                                             icon: Icon(
-                                                user?.uid == _post.uid
+                                                user?.uid == _poll.uid
                                                     ? Icons.create_outlined
                                                     : Icons.more_vert,
                                                 color: Colors.black),
                                             onPressed: () {
-                                              user?.uid == _post.uid
+                                              user?.uid == _poll.uid
                                                   ? Navigator.push(
                                                       context,
                                                       MaterialPageRoute(
@@ -539,9 +455,9 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                           width:
                                               MediaQuery.of(context).size.width,
                                           child: Text(
-                                            _post.uid == user?.uid
+                                            _poll.uid == user?.uid
                                                 ? 'About Me'
-                                                : 'About ${_post.username}',
+                                                : 'About ${_poll.username}',
                                             textAlign: TextAlign.center,
                                             style: TextStyle(
                                               color: Colors.black,
@@ -653,7 +569,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                     child: StreamBuilder(
                       stream: FirebaseFirestore.instance
                           .collection('posts')
-                          .where('uid', isEqualTo: _post.uid)
+                          .where('uid', isEqualTo: _poll.uid)
                           .snapshots(),
                       builder: (content, snapshot) {
                         return Container(
@@ -690,7 +606,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                               StreamBuilder(
                                   stream: FirebaseFirestore.instance
                                       .collection('polls')
-                                      .where('uid', isEqualTo: _post.uid)
+                                      .where('uid', isEqualTo: _poll.uid)
                                       .snapshots(),
                                   builder: (content, snapshot) {
                                     return Container(
@@ -724,21 +640,21 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                               StreamBuilder(
                                   stream: FirebaseFirestore.instance
                                       .collection('posts')
-                                      .where('plus', arrayContains: _post.uid)
+                                      .where('plus', arrayContains: _poll.uid)
                                       .snapshots(),
                                   builder: (content, snapshot1) {
                                     return StreamBuilder(
                                         stream: FirebaseFirestore.instance
                                             .collection('posts')
                                             .where('minus',
-                                                arrayContains: _post.uid)
+                                                arrayContains: _poll.uid)
                                             .snapshots(),
                                         builder: (content, snapshot2) {
                                           return StreamBuilder(
                                               stream: FirebaseFirestore.instance
                                                   .collection('posts')
                                                   .where('neutral',
-                                                      arrayContains: _post.uid)
+                                                      arrayContains: _poll.uid)
                                                   .snapshots(),
                                               builder: (content, snapshot3) {
                                                 return StreamBuilder(
@@ -747,7 +663,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                                         .collection('polls')
                                                         .where('allVotesUIDs',
                                                             arrayContains:
-                                                                _post.uid)
+                                                                _poll.uid)
                                                         .snapshots(),
                                                     builder:
                                                         (content, snapshot4) {
@@ -813,7 +729,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                 .collection('posts')
                                 // .doc()
                                 // .collection('comments')
-                                .where('uid', isEqualTo: _post.uid)
+                                .where('uid', isEqualTo: _poll.uid)
                                 .snapshots(),
                             builder: (context,
                                 AsyncSnapshot<
@@ -856,7 +772,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                 .collection('polls')
                                 // .doc()
                                 // .collection('comments')
-                                .where('uid', isEqualTo: _post.uid)
+                                .where('uid', isEqualTo: _poll.uid)
                                 .snapshots(),
                             builder: (context,
                                 AsyncSnapshot<
@@ -928,14 +844,14 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                     // .doc()
                                     // .collection('comments')
                                     .where('allVotesUIDs',
-                                        arrayContains: _post.uid)
+                                        arrayContains: _poll.uid)
                                     .snapshots(),
                                 FirebaseFirestore.instance
                                     .collection('polls')
                                     // .doc()
                                     // .collection('comments')
                                     .where('allVotesUIDs',
-                                        arrayContains: _post.uid)
+                                        arrayContains: _poll.uid)
                                     .snapshots(),
                               ]),
                               builder: (context,

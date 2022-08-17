@@ -1,4 +1,6 @@
 import 'dart:developer';
+
+import 'package:aft/ATESTS/screens/profile_screen_poll.dart';
 import 'package:aft/ATESTS/screens/report_user_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
@@ -9,13 +11,18 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 // import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
-import '../feeds/comment_card_poll.dart';
-import '../methods/firestore_methods.dart';
-import '../models/poll.dart';
-import '../models/user.dart';
-import '../other/utils.dart.dart';
-import '../poll/poll_view.dart.dart';
+
+import '../methods/auth_methods.dart';
 import '../provider/user_provider.dart';
+import '../utils/utils.dart';
+import '../zFeeds/comment_card_poll.dart';
+import '../models/poll.dart';
+import '../models/post.dart';
+import '../models/user.dart';
+import '../poll/poll_view.dart';
+
+import '../methods/firestore_methods.dart';
+
 import 'full_image_screen.dart';
 import 'home_screen.dart';
 
@@ -66,6 +73,8 @@ class FullMessagePoll extends StatefulWidget {
 
 class _FullMessagePollState extends State<FullMessagePoll> {
   late Poll _poll;
+  final AuthMethods _authMethods = AuthMethods();
+  User? _userProfile;
 
   final TextEditingController _commentController = TextEditingController();
   final TextStyle _pollOptionTextStyle = const TextStyle(
@@ -76,21 +85,33 @@ class _FullMessagePollState extends State<FullMessagePoll> {
   String placement = '';
   bool filter = false;
   bool _isPollEnded = false;
-  String option1 = '';
-  String option2 = '';
-  String option3 = '';
-  String option4 = '';
-  String option5 = '';
-  String option6 = '';
-  String option7 = '';
-  String option8 = '';
-  String option9 = '';
-  String option10 = '';
 
   List<CommentSort> commentSorts = [
     CommentSort(label: 'Most Popular', key: 'likeCount', value: true),
     CommentSort(label: 'Most Recent', key: 'datePublished', value: true),
   ];
+
+  reinitializeCommentFilter(Poll poll) {
+    commentFilters.clear();
+    commentFilters.add(CommentFilter(
+      label: 'All',
+      key: 'commentId',
+      value: 'all',
+    ));
+    for (int i = 1; i < 11; i++) {
+      String option = poll.toJson()["option$i"];
+      if (option.isNotEmpty) {
+        commentFilters.add(CommentFilter(
+          label: '$option',
+          key: "vote$i",
+          value: 'uid',
+        ));
+      }
+    }
+    commentFilters.forEach((element) {
+      print(element.key);
+    });
+  }
 
   List<CommentFilter> commentFilters = [
     CommentFilter(
@@ -226,38 +247,6 @@ class _FullMessagePollState extends State<FullMessagePoll> {
                   showSnackBar('Poll Deleted', context);
                 },
               ),
-              // SimpleDialogOption(
-              //   padding: const EdgeInsets.all(20),
-              //   child: Row(
-              //     children: [
-              //       Icon(Icons.clear),
-              //       Container(width: 10),
-              //       const Text('Close',
-              //           style: TextStyle(letterSpacing: 0.2, fontSize: 15)),
-              //     ],
-              //   ),
-              //   onPressed: () {
-              //     Navigator.of(context).pop();
-              //   },
-              // ),
-              // Column(
-              //   mainAxisAlignment: MainAxisAlignment.center,
-              //   children: [
-              //     InkWell(
-              //       onTap: () {
-              //         Navigator.of(context).pop();
-              //       },
-              //       child: Text(
-              //         'Close',
-              //         style: TextStyle(
-              //             letterSpacing: 0.2,
-              //             fontSize: 15,
-              //             color: Colors.blueAccent),
-              //       ),
-              //     ),
-              //     Container(height: 8),
-              //   ],
-              // ),
             ],
           );
         });
@@ -266,13 +255,22 @@ class _FullMessagePollState extends State<FullMessagePoll> {
   @override
   void initState() {
     _poll = widget.poll;
+    reinitializeCommentFilter(_poll);
     _selectedCommentSort = commentSorts.first;
     _selectedCommentFilter = commentFilters.first;
     placement = '#${(widget.indexPlacement + 1).toString()}';
-    option1 = '_poll.option1';
+    // option1 = '_poll.option1';
 
     currentReplyCommentId = null;
+    getUserDetails();
     super.initState();
+  }
+
+  getUserDetails() async {
+    User userProfile = await _authMethods.getUserProfileDetails(_poll.uid);
+    setState(() {
+      _userProfile = userProfile;
+    });
   }
 
   @override
@@ -290,9 +288,6 @@ class _FullMessagePollState extends State<FullMessagePoll> {
   Widget build(BuildContext context) {
     _poll = widget.poll;
 
-    print('INSIDE FULL MESSAGE BUILD');
-    print('_post.toJson(): ${_poll.toJson()}');
-
     final User? user = Provider.of<UserProvider>(context).getUser;
     _isPollEnded = (_poll.endDate as Timestamp)
         .toDate()
@@ -301,25 +296,40 @@ class _FullMessagePollState extends State<FullMessagePoll> {
         )
         .isNegative;
 
-    print("_selectedCommentFilter.key: ${_selectedCommentFilter.key}");
-    print("_post.toJson(): ${_poll.toJson()}");
-    print(
-        "_post.toJson()[_selectedCommentFilter.key]: ${_poll.toJson()[_selectedCommentFilter.key]}");
-
     return StreamBuilder(
         stream: FirebaseFirestore.instance
             .collection('polls')
-            .doc(_poll.pollId)
+            .doc(widget.poll.pollId)
             .snapshots(),
         builder: (context,
             AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> snapshot) {
+          // if (snapshot.connectionState == ConnectionState.waiting) {
+          //   return const Center(
+          //     child: CircularProgressIndicator(),
+          //   );
+          // }
+
           _poll = snapshot.data != null ? Poll.fromSnap(snapshot.data!) : _poll;
+
+          // _isPollEnded = (_poll.endDate as Timestamp)
+          //   .toDate()
+          //   .difference(
+          //     DateTime.now(),
+          //   )
+          //   .isNegative;
+
           return Container(
             color: Colors.white,
             child: SafeArea(
               child: Scaffold(
                 backgroundColor: Color.fromARGB(255, 245, 245, 245),
                 appBar: AppBar(
+                  shape: Border(
+                    bottom: BorderSide(
+                      width: 0,
+                      color: Colors.grey,
+                    ),
+                  ),
                   backgroundColor: Colors.white,
                   automaticallyImplyLeading: false,
                   elevation: 0,
@@ -419,495 +429,657 @@ class _FullMessagePollState extends State<FullMessagePoll> {
                     ),
                   ],
                 ),
-                body: StreamBuilder(
-                  stream: FirebaseFirestore.instance
-                      .collection('polls')
-                      .doc(_poll.pollId)
-                      .snapshots(),
-                  builder: (context,
-                      AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>>
-                          snapshot) {
-                    _poll = snapshot.data != null
-                        ? Poll.fromSnap(snapshot.data!)
-                        : _poll;
-                    return SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(
-                                right: 8, left: 8, top: 8, bottom: 0),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                  // color: Colors.white,
-                                  ),
-                              child: Column(
-                                children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(8)),
-                                    child: Column(
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            bottom: 8.0,
-                                            top: 6.0,
-                                            // right: 10,
-                                            left: 10,
-                                          ),
-                                          child: Container(
-                                            // color: Colors.orange,
-                                            child: Row(
-                                              children: [
-                                                CircleAvatar(
-                                                  backgroundColor:
-                                                      Color.fromARGB(
-                                                          255, 227, 227, 227),
-                                                  backgroundImage: NetworkImage(
-                                                    _poll.profImage,
+                body: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            right: 8, left: 8, top: 8, bottom: 0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                              // color: Colors.white,
+                              ),
+                          child: Column(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border:
+                                      Border.all(color: Colors.grey, width: 0),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 8.0,
+                                        top: 6.0,
+                                        // right: 10,
+                                        left: 10,
+                                      ),
+                                      child: Container(
+                                        // color: Colors.orange,
+                                        child: Row(
+                                          children: [
+                                            InkWell(
+                                              onTap: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          ProfilePoll(
+                                                            poll: _poll,
+                                                          )),
+                                                );
+                                              },
+                                              child: Stack(
+                                                children: [
+                                                  _poll.profImage != ""
+                                                      ? CircleAvatar(
+                                                          radius: 20,
+                                                          backgroundColor:
+                                                              Color.fromARGB(
+                                                                  255,
+                                                                  227,
+                                                                  227,
+                                                                  227),
+                                                          backgroundImage:
+                                                              NetworkImage(_poll
+                                                                  .profImage),
+                                                        )
+                                                      : CircleAvatar(
+                                                          radius: 20,
+                                                          backgroundColor:
+                                                              Color.fromARGB(
+                                                                  255,
+                                                                  227,
+                                                                  227,
+                                                                  227),
+                                                          backgroundImage:
+                                                              AssetImage(
+                                                                  'assets/avatarFT.jpg')),
+                                                  Positioned(
+                                                    bottom: 0,
+                                                    right: 2.8,
+                                                    child: Container(
+                                                      child: Row(
+                                                        children: [
+                                                          _userProfile?.profileFlag ==
+                                                                  "true"
+                                                              ? Container(
+                                                                  width: 15.5,
+                                                                  height: 7.7,
+                                                                  child: Image.asset(
+                                                                      'icons/flags/png/${user?.country}.png',
+                                                                      package:
+                                                                          'country_icons'))
+                                                              : Row()
+                                                        ],
+                                                      ),
+                                                    ),
                                                   ),
-                                                  radius: 18,
+                                                  Positioned(
+                                                    bottom: 0,
+                                                    right: 0,
+                                                    child: Container(
+                                                      child: Row(
+                                                        children: [
+                                                          _userProfile?.profileBadge ==
+                                                                  "true"
+                                                              ? CircleAvatar(
+                                                                  radius: 6,
+                                                                  backgroundColor:
+                                                                      Color.fromARGB(
+                                                                          255,
+                                                                          245,
+                                                                          245,
+                                                                          245),
+                                                                  child:
+                                                                      Container(
+                                                                    child: Icon(
+                                                                        Icons
+                                                                            .verified,
+                                                                        color: Color.fromARGB(
+                                                                            255,
+                                                                            113,
+                                                                            191,
+                                                                            255),
+                                                                        size:
+                                                                            12),
+                                                                  ),
+                                                                )
+                                                              : Row()
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            SizedBox(width: 10),
+                                            Expanded(
+                                              child: Container(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Container(
+                                                        child: Text(
+                                                      _poll.username,
+                                                      maxLines: 1,
+                                                      textAlign:
+                                                          TextAlign.start,
+                                                      style: TextStyle(
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          fontSize: 15.5,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: Colors.black,
+                                                          letterSpacing: 0.5),
+                                                    )),
+                                                    SizedBox(height: 2),
+                                                    Text(
+                                                      DateFormat.yMMMd().format(
+                                                        _poll.datePublished
+                                                            .toDate(),
+                                                      ),
+                                                      style: const TextStyle(
+                                                          fontSize: 12.5,
+                                                          color: Colors.grey),
+                                                    ),
+                                                  ],
                                                 ),
-                                                Expanded(
+                                              ),
+                                            ),
+                                            Container(
+                                              // color: Colors.brown,
+                                              alignment: Alignment.centerRight,
+                                              child: IconButton(
+                                                onPressed: _poll.uid ==
+                                                        user?.uid
+                                                    ? () => _deletePost(context)
+                                                    : () =>
+                                                        _otherUsers(context),
+                                                icon:
+                                                    const Icon(Icons.more_vert),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 8, right: 8.0, bottom: 0),
+                                      child: Text('${_poll.pollTitle}',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500)),
+                                    ),
+                                    Container(
+                                      padding: EdgeInsets.only(
+                                          right: 8, left: 8, bottom: 6),
+                                      child: Stack(
+                                        children: [
+                                          PollView(
+                                            pollId: _poll.pollId,
+                                            pollEnded: _isPollEnded,
+                                            hasVoted: _poll.allVotesUIDs
+                                                .contains(user?.uid),
+                                            userVotedOptionId:
+                                                _getUserPollOptionId(
+                                                    user?.uid ?? ''),
+                                            onVoted: (PollOption pollOption,
+                                                int newTotalVotes) async {
+                                              if (!_isPollEnded) {
+                                                performLoggedUserAction(
+                                                    context: context,
+                                                    action: () async {
+                                                      await FirestoreMethods()
+                                                          .poll(
+                                                        poll: _poll,
+                                                        uid: user?.uid ?? '',
+                                                        optionIndex:
+                                                            pollOption.id!,
+                                                      );
+                                                    });
+                                              }
+
+                                              print(
+                                                  'newTotalVotes: ${newTotalVotes}');
+                                              print('Voted: ${pollOption.id}');
+                                            },
+                                            leadingVotedProgessColor:
+                                                Colors.blue.shade200,
+                                            pollOptionsSplashColor:
+                                                Colors.white,
+                                            votedProgressColor: Colors.blueGrey
+                                                .withOpacity(0.3),
+                                            votedBackgroundColor:
+                                                Colors.grey.withOpacity(0.2),
+                                            votedCheckmark: const Icon(
+                                              Icons.check_circle_outline,
+                                              color: Color.fromARGB(
+                                                  255, 17, 125, 21),
+                                              size: 18,
+                                            ),
+                                            // pollTitle: Align(
+                                            //   alignment: Alignment.center,
+                                            //   child: Text(
+                                            //     _poll.pollTitle,
+                                            //     textAlign: TextAlign.center,
+                                            //     style: const TextStyle(
+                                            //       fontSize: 16,
+                                            //       fontWeight: FontWeight.w500,
+                                            //     ),
+                                            //   ),
+                                            // ),
+                                            pollOptions: [
+                                              PollOption(
+                                                id: 1,
+                                                title: Expanded(
+                                                  child: Text(
+                                                    _poll.option1,
+                                                    maxLines: 1,
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ),
+                                                votes: _poll.vote1.length,
+                                              ),
+                                              PollOption(
+                                                id: 2,
+                                                title: Expanded(
+                                                  child: Text(
+                                                    _poll.option2,
+                                                    maxLines: 1,
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ),
+                                                votes: _poll.vote2.length,
+                                              ),
+                                              if (_poll.option3 != '')
+                                                PollOption(
+                                                  id: 3,
+                                                  title: Expanded(
+                                                    child: Text(
+                                                      _poll.option3,
+                                                      maxLines: 1,
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  votes: _poll.vote3.length,
+                                                ),
+                                              if (_poll.option4 != '')
+                                                PollOption(
+                                                  id: 4,
+                                                  title: Expanded(
+                                                    child: Text(
+                                                      _poll.option4,
+                                                      maxLines: 1,
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  votes: _poll.vote4.length,
+                                                ),
+                                              if (_poll.option5 != '')
+                                                PollOption(
+                                                  id: 5,
+                                                  title: Expanded(
+                                                    child: Text(
+                                                      _poll.option5,
+                                                      maxLines: 1,
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  votes: _poll.vote5.length,
+                                                ),
+                                              if (_poll.option6 != '')
+                                                PollOption(
+                                                  id: 6,
+                                                  title: Expanded(
+                                                    child: Text(
+                                                      _poll.option6,
+                                                      maxLines: 1,
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  votes: _poll.vote6.length,
+                                                ),
+                                              if (_poll.option7 != '')
+                                                PollOption(
+                                                  id: 7,
+                                                  title: Expanded(
+                                                    child: Text(
+                                                      _poll.option7,
+                                                      maxLines: 1,
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  votes: _poll.vote7.length,
+                                                ),
+                                              if (_poll.option8 != '')
+                                                PollOption(
+                                                  id: 8,
+                                                  title: Expanded(
+                                                    child: Text(
+                                                      _poll.option8,
+                                                      maxLines: 1,
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  votes: _poll.vote8.length,
+                                                ),
+                                              if (_poll.option9 != '')
+                                                PollOption(
+                                                  id: 9,
+                                                  title: Expanded(
+                                                    child: Text(
+                                                      _poll.option9,
+                                                      maxLines: 1,
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  votes: _poll.vote9.length,
+                                                ),
+                                              if (_poll.option10 != '')
+                                                PollOption(
+                                                  id: 10,
+                                                  title: Expanded(
+                                                    child: Text(
+                                                      _poll.option10,
+                                                      maxLines: 1,
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  votes: _poll.vote10.length,
+                                                ),
+                                            ],
+                                            metaWidget: Row(
+                                              children: [],
+                                            ),
+                                          ),
+                                          Positioned.fill(
+                                              child: Visibility(
+                                            visible: _isPollEnded,
+                                            child: Container(
+                                              color: Colors.cyanAccent
+                                                  .withOpacity(0.0),
+                                            ),
+                                          )),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.only(top: 8.0, bottom: 8),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                        color: Colors.grey, width: 0),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              left: 14,
+                                              top: 16,
+                                              bottom: 4,
+                                            ),
+                                            child: StreamBuilder(
+                                              stream: _selectedCommentFilter
+                                                          .value ==
+                                                      'all'
+                                                  ? FirebaseFirestore.instance
+                                                      .collection('polls')
+                                                      .doc(_poll.pollId)
+                                                      .collection('comments')
+
+                                                      // Sort
+                                                      .orderBy(
+                                                          _selectedCommentSort
+                                                              .key,
+                                                          descending:
+                                                              _selectedCommentSort
+                                                                  .value)
+                                                      .snapshots()
+                                                  : FirebaseFirestore.instance
+                                                      .collection('polls')
+                                                      .doc(_poll.pollId)
+                                                      .collection('comments')
+                                                      .orderBy(
+                                                          _selectedCommentSort
+                                                              .key,
+                                                          descending:
+                                                              _selectedCommentSort
+                                                                  .value)
+                                                      // Filter
+                                                      .where(
+                                                          _selectedCommentFilter
+                                                              .value,
+                                                          whereIn: (_poll
+                                                                  .toJson()[
+                                                                      _selectedCommentFilter
+                                                                          .key]
+                                                                  .isNotEmpty
+                                                              ? _poll.toJson()[
+                                                                  _selectedCommentFilter
+                                                                      .key]
+                                                              : [
+                                                                  'placeholder_uid'
+                                                                ]))
+
+                                                      // Sort
+                                                      // .orderBy(_selectedCommentSort.key,
+                                                      //     descending:
+                                                      //         _selectedCommentSort
+                                                      //             .value)
+                                                      .snapshots(),
+                                              builder: (content, snapshot) {
+                                                return Text(
+                                                  'Comments (${(snapshot.data as dynamic)?.docs.length ?? 0})',
+                                                  style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 18,
+                                                      letterSpacing: 0.8),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                          InkWell(
+                                            onTap: () {
+                                              setState(() {
+                                                filter = !filter;
+                                              });
+                                            },
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                right: 10,
+                                                top: 10,
+                                              ),
+                                              child: Container(
+                                                width: 40,
+                                                // color: Colors.brown,
+                                                child: Stack(
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.filter_list,
+                                                      color: Colors.black,
+                                                    ),
+                                                    Positioned(
+                                                      right: -3,
+                                                      child: Icon(
+                                                          filter == false
+                                                              ? Icons
+                                                                  .arrow_drop_down
+                                                              : Icons
+                                                                  .arrow_drop_up,
+                                                          color: Colors.black),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                      filter == false
+                                          ? Container()
+                                          : Padding(
+                                              padding: const EdgeInsets.only(
+                                                  left: 14.0,
+                                                  right: 14,
+                                                  top: 10,
+                                                  bottom: 1),
+                                              child: Container(
+                                                color: Colors.white,
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    border: Border.all(
+                                                        width: 0,
+                                                        color: Color.fromARGB(
+                                                            255,
+                                                            200,
+                                                            200,
+                                                            200)),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8),
+                                                    color: Color.fromARGB(
+                                                        255, 245, 245, 245),
+                                                  ),
+                                                  // height: 108,
                                                   child: Padding(
                                                     padding:
                                                         const EdgeInsets.only(
-                                                      left: 16,
+                                                      left: 10,
+                                                      top: 10,
+                                                      bottom: 10,
                                                     ),
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        RichText(
-                                                          text: TextSpan(
+                                                    child: Container(
+                                                      child: Column(
+                                                        children: [
+                                                          Row(
                                                             children: [
-                                                              TextSpan(
-                                                                text: _poll
-                                                                    .username,
-                                                                style:
-                                                                    const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  color: Colors
-                                                                      .black,
-                                                                  letterSpacing:
-                                                                      0.5,
-                                                                  fontSize: 16,
-                                                                ),
+                                                              Text(
+                                                                'Sort:   ',
+                                                                style: TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    fontSize:
+                                                                        15,
+                                                                    letterSpacing:
+                                                                        0.8),
+                                                              ),
+                                                              Row(
+                                                                children: [
+                                                                  ...List.generate(
+                                                                      commentSorts
+                                                                          .length,
+                                                                      (index) {
+                                                                    CommentSort
+                                                                        commentSort =
+                                                                        commentSorts[
+                                                                            index];
+                                                                    return InkResponse(
+                                                                      child:
+                                                                          Row(
+                                                                        children: [
+                                                                          PhysicalModel(
+                                                                            color: _selectedCommentSort == commentSort
+                                                                                ? Colors.grey
+                                                                                : Color.fromARGB(255, 247, 245, 245),
+                                                                            elevation:
+                                                                                2,
+                                                                            // shadowColor: Colors.black,
+                                                                            borderRadius:
+                                                                                BorderRadius.circular(25),
+                                                                            child:
+                                                                                Padding(
+                                                                              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
+                                                                              child: Text(commentSort.label, style: TextStyle(color: _selectedCommentSort == commentSort ? Colors.white : Color.fromARGB(255, 111, 111, 111))),
+                                                                            ),
+                                                                          ),
+                                                                          Container(
+                                                                              width: 10),
+                                                                        ],
+                                                                      ),
+                                                                      onTap: () =>
+                                                                          setState(
+                                                                        () {
+                                                                          _selectedCommentSort =
+                                                                              commentSort;
+                                                                        },
+                                                                      ),
+                                                                    );
+                                                                  })
+                                                                ],
                                                               ),
                                                             ],
                                                           ),
-                                                        ),
-                                                        Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(top: 2),
-                                                          child: Text(
-                                                            DateFormat.yMMMd()
-                                                                .format(_poll
-                                                                    .datePublished
-                                                                    .toDate()),
-                                                            style:
-                                                                const TextStyle(
-                                                                    fontSize:
-                                                                        12.5,
-                                                                    color: Colors
-                                                                        .grey),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                            right: 4.0),
-                                                    child: Container(
-                                                      // color: Colors.brown,
-                                                      alignment:
-                                                          Alignment.centerRight,
-                                                      child: IconButton(
-                                                        onPressed: _poll.uid ==
-                                                                user?.uid
-                                                            ? () => _deletePost(
-                                                                context)
-                                                            : () => _otherUsers(
-                                                                context),
-                                                        icon: const Icon(
-                                                            Icons.more_vert),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                              left: 8, right: 8.0, bottom: 0),
-                                          child: Text('${_poll.pollTitle}',
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w500)),
-                                        ),
-                                        Container(
-                                          padding: EdgeInsets.only(
-                                              right: 8, left: 8, bottom: 6),
-                                          child: Stack(
-                                            children: [
-                                              PollView(
-                                                pollId: _poll.pollId,
-                                                pollEnded: _isPollEnded,
-                                                hasVoted: _poll.allVotesUIDs
-                                                    .contains(user?.uid),
-                                                userVotedOptionId:
-                                                    _getUserPollOptionId(
-                                                        user?.uid ?? ''),
-                                                onVoted: (PollOption pollOption,
-                                                    int newTotalVotes) async {
-                                                  if (!_isPollEnded) {
-                                                    performLoggedUserAction(
-                                                        context: context,
-                                                        action: () async {
-                                                          await FirestoreMethods()
-                                                              .poll(
-                                                            poll: _poll,
-                                                            uid:
-                                                                user?.uid ?? '',
-                                                            optionIndex:
-                                                                pollOption.id!,
-                                                          );
-                                                        });
-                                                  }
-
-                                                  print(
-                                                      'newTotalVotes: ${newTotalVotes}');
-                                                  print(
-                                                      'Voted: ${pollOption.id}');
-                                                },
-                                                leadingVotedProgessColor:
-                                                    Colors.blue.shade200,
-                                                pollOptionsSplashColor:
-                                                    Colors.white,
-                                                votedProgressColor: Colors
-                                                    .blueGrey
-                                                    .withOpacity(0.3),
-                                                votedBackgroundColor: Colors
-                                                    .grey
-                                                    .withOpacity(0.2),
-                                                votedCheckmark: const Icon(
-                                                  Icons.check_circle_outline,
-                                                  color: Color.fromARGB(
-                                                      255, 17, 125, 21),
-                                                  size: 18,
-                                                ),
-                                                // pollTitle: Align(
-                                                //   alignment: Alignment.center,
-                                                //   child: Text(
-                                                //     _poll.pollTitle,
-                                                //     textAlign: TextAlign.center,
-                                                //     style: const TextStyle(
-                                                //       fontSize: 16,
-                                                //       fontWeight: FontWeight.w500,
-                                                //     ),
-                                                //   ),
-                                                // ),
-                                                pollOptions: [
-                                                  PollOption(
-                                                    id: 1,
-                                                    title: Text(
-                                                      _poll.option1,
-                                                      style:
-                                                          _pollOptionTextStyle,
-                                                    ),
-                                                    votes: _poll.vote1.length,
-                                                  ),
-                                                  PollOption(
-                                                    id: 2,
-                                                    title: Text(
-                                                      _poll.option2,
-                                                      style:
-                                                          _pollOptionTextStyle,
-                                                    ),
-                                                    votes: _poll.vote2.length,
-                                                  ),
-                                                  if (_poll.option3 != '')
-                                                    PollOption(
-                                                      id: 3,
-                                                      title: Text(
-                                                        _poll.option3,
-                                                        style:
-                                                            _pollOptionTextStyle,
-                                                      ),
-                                                      votes: _poll.vote3.length,
-                                                    ),
-                                                  if (_poll.option4 != '')
-                                                    PollOption(
-                                                      id: 4,
-                                                      title: Text(
-                                                        _poll.option4,
-                                                        style:
-                                                            _pollOptionTextStyle,
-                                                      ),
-                                                      votes: _poll.vote4.length,
-                                                    ),
-                                                  if (_poll.option5 != '')
-                                                    PollOption(
-                                                      id: 5,
-                                                      title: Text(
-                                                        _poll.option5,
-                                                        style:
-                                                            _pollOptionTextStyle,
-                                                      ),
-                                                      votes: _poll.vote5.length,
-                                                    ),
-                                                  if (_poll.option6 != '')
-                                                    PollOption(
-                                                      id: 6,
-                                                      title: Text(
-                                                        _poll.option6,
-                                                        style:
-                                                            _pollOptionTextStyle,
-                                                      ),
-                                                      votes: _poll.vote6.length,
-                                                    ),
-                                                  if (_poll.option7 != '')
-                                                    PollOption(
-                                                      id: 7,
-                                                      title: Text(
-                                                        _poll.option7,
-                                                        style:
-                                                            _pollOptionTextStyle,
-                                                      ),
-                                                      votes: _poll.vote7.length,
-                                                    ),
-                                                  if (_poll.option8 != '')
-                                                    PollOption(
-                                                      id: 8,
-                                                      title: Text(
-                                                        _poll.option8,
-                                                        style:
-                                                            _pollOptionTextStyle,
-                                                      ),
-                                                      votes: _poll.vote8.length,
-                                                    ),
-                                                  if (_poll.option9 != '')
-                                                    PollOption(
-                                                      id: 9,
-                                                      title: Text(
-                                                        _poll.option9,
-                                                        style:
-                                                            _pollOptionTextStyle,
-                                                      ),
-                                                      votes: _poll.vote9.length,
-                                                    ),
-                                                  if (_poll.option10 != '')
-                                                    PollOption(
-                                                      id: 10,
-                                                      title: Text(
-                                                        _poll.option10,
-                                                        style:
-                                                            _pollOptionTextStyle,
-                                                      ),
-                                                      votes:
-                                                          _poll.vote10.length,
-                                                    ),
-                                                ],
-                                                metaWidget: Row(
-                                                  children: [],
-                                                ),
-                                              ),
-                                              Positioned.fill(
-                                                  child: Visibility(
-                                                visible: _isPollEnded,
-                                                child: Container(
-                                                  color: Colors.cyanAccent
-                                                      .withOpacity(0.0),
-                                                ),
-                                              )),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                        top: 8.0, bottom: 8),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius:
-                                              BorderRadius.circular(8)),
-                                      child: Column(
-                                        children: [
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Padding(
-                                                padding: const EdgeInsets.only(
-                                                  left: 14,
-                                                  top: 16,
-                                                  bottom: 4,
-                                                ),
-                                                child: StreamBuilder(
-                                                  stream: _selectedCommentFilter
-                                                              .value ==
-                                                          'all'
-                                                      ? FirebaseFirestore
-                                                          .instance
-                                                          .collection('polls')
-                                                          .doc(_poll.pollId)
-                                                          .collection(
-                                                              'comments')
-
-                                                          // Sort
-                                                          .orderBy(
-                                                              _selectedCommentSort
-                                                                  .key,
-                                                              descending:
-                                                                  _selectedCommentSort
-                                                                      .value)
-                                                          .snapshots()
-                                                      : FirebaseFirestore
-                                                          .instance
-                                                          .collection('polls')
-                                                          .doc(_poll.pollId)
-                                                          .collection(
-                                                              'comments')
-                                                          .orderBy(
-                                                              _selectedCommentSort
-                                                                  .key,
-                                                              descending:
-                                                                  _selectedCommentSort
-                                                                      .value)
-                                                          // Filter
-                                                          .where(
-                                                              _selectedCommentFilter
-                                                                  .value,
-                                                              whereIn: (_poll
-                                                                      .toJson()[
-                                                                          _selectedCommentFilter
-                                                                              .key]
-                                                                      .isNotEmpty
-                                                                  ? _poll.toJson()[
-                                                                      _selectedCommentFilter
-                                                                          .key]
-                                                                  : [
-                                                                      'placeholder_uid'
-                                                                    ]))
-
-                                                          // Sort
-                                                          // .orderBy(_selectedCommentSort.key,
-                                                          //     descending:
-                                                          //         _selectedCommentSort
-                                                          //             .value)
-                                                          .snapshots(),
-                                                  builder: (content, snapshot) {
-                                                    return Text(
-                                                      'Comments (${(snapshot.data as dynamic)?.docs.length ?? 0})',
-                                                      style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 18,
-                                                          letterSpacing: 0.8),
-                                                    );
-                                                  },
-                                                ),
-                                              ),
-                                              InkWell(
-                                                onTap: () {
-                                                  setState(() {
-                                                    filter = !filter;
-                                                  });
-                                                },
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                    right: 10,
-                                                    top: 10,
-                                                  ),
-                                                  child: Container(
-                                                    width: 40,
-                                                    // color: Colors.brown,
-                                                    child: Stack(
-                                                      children: [
-                                                        const Icon(
-                                                          Icons.filter_list,
-                                                          color: Colors.black,
-                                                        ),
-                                                        Positioned(
-                                                          right: -3,
-                                                          child: Icon(
-                                                              filter == false
-                                                                  ? Icons
-                                                                      .arrow_drop_down
-                                                                  : Icons
-                                                                      .arrow_drop_up,
-                                                              color:
-                                                                  Colors.black),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              )
-                                            ],
-                                          ),
-                                          filter == false
-                                              ? Container()
-                                              : Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          left: 14.0,
-                                                          right: 14,
-                                                          top: 10,
-                                                          bottom: 1),
-                                                  child: Container(
-                                                    color: Colors.white,
-                                                    child: Container(
-                                                      decoration: BoxDecoration(
-                                                        border: Border.all(
-                                                            width: 0,
-                                                            color:
-                                                                Color.fromARGB(
-                                                                    255,
-                                                                    224,
-                                                                    224,
-                                                                    224)),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(8),
-                                                        color: Color.fromARGB(
-                                                            255, 245, 245, 245),
-                                                      ),
-                                                      // height: 108,
-                                                      child: Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .only(
-                                                          left: 10,
-                                                          top: 10,
-                                                          bottom: 10,
-                                                        ),
-                                                        child: Container(
-                                                          child: Column(
-                                                            children: [
-                                                              Row(
-                                                                children: [
-                                                                  Text(
-                                                                    'Sort:   ',
+                                                          Container(height: 10),
+                                                          Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                        .only(
+                                                                    bottom:
+                                                                        0.0),
+                                                            child: Row(
+                                                              children: [
+                                                                Text('Filter: ',
                                                                     style: TextStyle(
                                                                         fontWeight:
                                                                             FontWeight
@@ -915,388 +1087,380 @@ class _FullMessagePollState extends State<FullMessagePoll> {
                                                                         fontSize:
                                                                             15,
                                                                         letterSpacing:
-                                                                            0.8),
-                                                                  ),
-                                                                  Row(
-                                                                    children: [
-                                                                      ...List.generate(
-                                                                          commentSorts
-                                                                              .length,
-                                                                          (index) {
-                                                                        CommentSort
-                                                                            commentSort =
-                                                                            commentSorts[index];
-                                                                        return InkResponse(
-                                                                          child:
-                                                                              Row(
-                                                                            children: [
-                                                                              PhysicalModel(
-                                                                                color: _selectedCommentSort == commentSort ? Colors.grey : Color.fromARGB(255, 247, 245, 245),
-                                                                                elevation: 2,
-                                                                                // shadowColor: Colors.black,
-                                                                                borderRadius: BorderRadius.circular(25),
-                                                                                child: Padding(
-                                                                                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
-                                                                                  child: Text(commentSort.label, style: TextStyle(color: _selectedCommentSort == commentSort ? Colors.white : Color.fromARGB(255, 111, 111, 111))),
-                                                                                ),
-                                                                              ),
-                                                                              Container(width: 10),
-                                                                            ],
-                                                                          ),
-                                                                          onTap: () =>
-                                                                              setState(
-                                                                            () {
-                                                                              _selectedCommentSort = commentSort;
-                                                                            },
-                                                                          ),
-                                                                        );
-                                                                      })
-                                                                    ],
-                                                                  ),
-                                                                  // Expanded(
-                                                                  //   child:
-                                                                  //       Padding(
-                                                                  //     padding: const EdgeInsets
-                                                                  //             .only(
-                                                                  //         right:
-                                                                  //             12.0),
-                                                                  //     child:
-                                                                  //         Align(
-                                                                  //       alignment:
-                                                                  //           Alignment.centerRight,
-                                                                  //       child:
-                                                                  //           InkWell(
-                                                                  //         onTap:
-                                                                  //             () {
-                                                                  //           setState(() {
-                                                                  //             filter = !filter;
-                                                                  //           });
-                                                                  //         },
-                                                                  //         child:
-                                                                  //             Container(
-                                                                  //           height:
-                                                                  //               30,
-                                                                  //           child:
-                                                                  //               Icon(
-                                                                  //             Icons.close,
-                                                                  //           ),
-                                                                  //         ),
-                                                                  //       ),
-                                                                  //     ),
-                                                                  //   ),
-                                                                  // ),
-                                                                ],
-                                                              ),
-                                                              Container(
-                                                                  height: 10),
-                                                              Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                            .only(
-                                                                        bottom:
-                                                                            0.0),
-                                                                child: Row(
-                                                                  children: [
-                                                                    Text(
-                                                                        'Filter: ',
-                                                                        style: TextStyle(
-                                                                            fontWeight: FontWeight
-                                                                                .bold,
-                                                                            fontSize:
-                                                                                15,
-                                                                            letterSpacing:
-                                                                                0.8)),
-                                                                    Container(
-                                                                      height:
-                                                                          39,
-                                                                      // width: 286,
-                                                                      width: MediaQuery.of(context).size.width *
-                                                                              1 -
-                                                                          105,
+                                                                            0.8)),
+                                                                Container(
+                                                                  height: 39,
+                                                                  // width: 286,
+                                                                  width: MediaQuery.of(context)
+                                                                              .size
+                                                                              .width *
+                                                                          1 -
+                                                                      105,
+                                                                  child:
+                                                                      SingleChildScrollView(
+                                                                    scrollDirection:
+                                                                        Axis.horizontal,
+                                                                    child:
+                                                                        Padding(
+                                                                      padding: const EdgeInsets
+                                                                              .only(
+                                                                          left:
+                                                                              2.0),
                                                                       child:
-                                                                          SingleChildScrollView(
-                                                                        scrollDirection:
-                                                                            Axis.horizontal,
-                                                                        child:
-                                                                            Padding(
-                                                                          padding:
-                                                                              const EdgeInsets.only(left: 2.0),
-                                                                          child:
-                                                                              Row(
-                                                                            children: [
-                                                                              ...List.generate(commentFilters.length, (index) {
-                                                                                CommentFilter commentFilter = commentFilters[index];
-                                                                                return InkResponse(
-                                                                                  child: Row(
-                                                                                    children: [
-                                                                                      PhysicalModel(
-                                                                                        color: _selectedCommentFilter == commentFilter ? Colors.grey : Color.fromARGB(255, 247, 245, 245),
-                                                                                        elevation: 2,
-                                                                                        // shadowColor: Colors.black,
-                                                                                        borderRadius: BorderRadius.circular(25),
-                                                                                        child: Padding(
-                                                                                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
-                                                                                          child: Row(
-                                                                                            children: [
-                                                                                              Text(
-                                                                                                '${commentFilter.label}',
-                                                                                                style: TextStyle(color: _selectedCommentFilter == commentFilter ? Colors.white : Color.fromARGB(255, 111, 111, 111)),
-                                                                                              ),
-                                                                                              commentFilter.icon ??
-                                                                                                  // Container(),
-                                                                                                  commentFilter.rotatedBox ??
-                                                                                                  Row(),
-                                                                                            ],
+                                                                          Row(
+                                                                        children: [
+                                                                          ...List.generate(
+                                                                              commentFilters.length,
+                                                                              (index) {
+                                                                            CommentFilter
+                                                                                commentFilter =
+                                                                                commentFilters[index];
+                                                                            return InkResponse(
+                                                                              child: Row(
+                                                                                children: [
+                                                                                  PhysicalModel(
+                                                                                    color: _selectedCommentFilter == commentFilter ? Colors.grey : Color.fromARGB(255, 247, 245, 245),
+                                                                                    elevation: 2,
+                                                                                    // shadowColor: Colors.black,
+                                                                                    borderRadius: BorderRadius.circular(25),
+                                                                                    child: Padding(
+                                                                                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
+                                                                                      child: Row(
+                                                                                        children: [
+                                                                                          Text(
+                                                                                            commentFilter.label != 'All' ? 'Voted: ' : '',
+                                                                                            style: TextStyle(color: _selectedCommentFilter == commentFilter ? Colors.white : Color.fromARGB(255, 111, 111, 111), fontSize: 12),
                                                                                           ),
-                                                                                        ),
+                                                                                          Text(
+                                                                                            commentFilter.label,
+                                                                                            style: TextStyle(color: _selectedCommentFilter == commentFilter ? Colors.white : Color.fromARGB(255, 111, 111, 111), fontWeight: commentFilter.label == 'All' ? FontWeight.normal : FontWeight.w500),
+                                                                                          ),
+                                                                                          commentFilter.icon ??
+                                                                                              // Container(),
+                                                                                              commentFilter.rotatedBox ??
+                                                                                              Row(),
+                                                                                        ],
                                                                                       ),
-                                                                                      Container(width: 10),
-                                                                                    ],
+                                                                                    ),
                                                                                   ),
-                                                                                  onTap: () => setState(
-                                                                                    () {
-                                                                                      _selectedCommentFilter = commentFilter;
-                                                                                    },
-                                                                                  ),
-                                                                                );
-                                                                              })
-                                                                            ],
-                                                                          ),
-                                                                        ),
+                                                                                  Container(width: 10),
+                                                                                ],
+                                                                              ),
+                                                                              onTap: () => setState(
+                                                                                () {
+                                                                                  _selectedCommentFilter = commentFilter;
+                                                                                },
+                                                                              ),
+                                                                            );
+                                                                          })
+                                                                        ],
                                                                       ),
                                                                     ),
-                                                                  ],
+                                                                  ),
                                                                 ),
-                                                              ),
-                                                            ],
+                                                              ],
+                                                            ),
                                                           ),
-                                                        ),
+                                                        ],
                                                       ),
                                                     ),
                                                   ),
                                                 ),
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                              // right: 8.0,
-                                              // left: 8,
-                                              bottom: 8,
+                                              ),
                                             ),
-                                            child: Container(
-                                              color: Colors.white,
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Container(
-                                                    // color: Colors.orange,
-                                                    child: Padding(
-                                                      // padding: const EdgeInsets.only(left: 8.0),
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                        left: 16.0,
-                                                        top: 14,
-                                                      ),
-                                                      child: CircleAvatar(
-                                                        backgroundColor:
-                                                            Color.fromARGB(255,
-                                                                227, 227, 227),
-                                                        backgroundImage:
-                                                            NetworkImage(
-                                                          user?.photoUrl ?? '',
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          // right: 8.0,
+                                          // left: 8,
+                                          bottom: 8,
+                                        ),
+                                        child: Container(
+                                          color: Colors.white,
+                                          child: Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Container(
+                                                // color: Colors.orange,
+                                                child: Padding(
+                                                  // padding: const EdgeInsets.only(left: 8.0),
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                    left: 16.0,
+                                                    top: 14,
+                                                  ),
+                                                  child: InkWell(
+                                                    onTap: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                            builder:
+                                                                (context) =>
+                                                                    ProfilePoll(
+                                                                      poll:
+                                                                          _poll,
+                                                                    )),
+                                                      );
+                                                    },
+                                                    child: Stack(
+                                                      children: [
+                                                        user?.photoUrl != null
+                                                            ? CircleAvatar(
+                                                                backgroundColor:
+                                                                    Color.fromARGB(
+                                                                        255,
+                                                                        227,
+                                                                        227,
+                                                                        227),
+                                                                backgroundImage:
+                                                                    NetworkImage(
+                                                                  user?.photoUrl ??
+                                                                      '',
+                                                                ),
+                                                                radius: 20,
+                                                              )
+                                                            : CircleAvatar(
+                                                                radius: 20,
+                                                                backgroundColor:
+                                                                    Color.fromARGB(
+                                                                        255,
+                                                                        227,
+                                                                        227,
+                                                                        227),
+                                                                backgroundImage:
+                                                                    AssetImage(
+                                                                        'assets/avatarFT.jpg')),
+                                                        Positioned(
+                                                          bottom: 0,
+                                                          right: 2.8,
+                                                          child: Container(
+                                                            child: Row(
+                                                              children: [
+                                                                _userProfile?.profileFlag ==
+                                                                        "true"
+                                                                    ? Container(
+                                                                        width:
+                                                                            15.5,
+                                                                        height:
+                                                                            7.7,
+                                                                        child: Image.asset(
+                                                                            'icons/flags/png/${user?.country}.png',
+                                                                            package:
+                                                                                'country_icons'))
+                                                                    : Row()
+                                                              ],
+                                                            ),
+                                                          ),
                                                         ),
-                                                        radius: 18,
+                                                        Positioned(
+                                                          bottom: 0,
+                                                          right: 0,
+                                                          child: Container(
+                                                            child: Row(
+                                                              children: [
+                                                                _userProfile?.profileBadge ==
+                                                                        "true"
+                                                                    ? CircleAvatar(
+                                                                        radius:
+                                                                            6,
+                                                                        backgroundColor: Color.fromARGB(
+                                                                            255,
+                                                                            245,
+                                                                            245,
+                                                                            245),
+                                                                        child:
+                                                                            Container(
+                                                                          child: Icon(
+                                                                              Icons.verified,
+                                                                              color: Color.fromARGB(255, 113, 191, 255),
+                                                                              size: 12),
+                                                                        ),
+                                                                      )
+                                                                    : Row()
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          left: 10,
+                                                          right: 14.0),
+                                                  child: Container(
+                                                    // height: 40,
+                                                    // color: Colors.grey,
+                                                    child: TextField(
+                                                      controller:
+                                                          _commentController,
+                                                      maxLines: null,
+                                                      decoration:
+                                                          InputDecoration(
+                                                        hintText:
+                                                            'Write a comment...',
+                                                        // hintText: 'Comment as ${user.username}',
+                                                        // border: InputBorder.none,
+                                                        hintStyle: TextStyle(
+                                                            fontStyle: FontStyle
+                                                                .italic,
+                                                            color: Colors.grey),
+                                                        labelStyle: TextStyle(
+                                                            color:
+                                                                Colors.black),
+                                                        contentPadding:
+                                                            EdgeInsets.only(
+                                                                top: 8),
                                                       ),
                                                     ),
                                                   ),
-                                                  Expanded(
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              left: 14,
-                                                              right: 14.0),
-                                                      child: Container(
-                                                        // height: 40,
-                                                        // color: Colors.grey,
-                                                        child: TextField(
-                                                          controller:
-                                                              _commentController,
-                                                          maxLines: null,
-                                                          decoration:
-                                                              InputDecoration(
-                                                            hintText:
-                                                                'Write a comment...',
-                                                            // hintText: 'Comment as ${user.username}',
-                                                            // border: InputBorder.none,
-                                                            hintStyle: TextStyle(
-                                                                fontStyle:
-                                                                    FontStyle
-                                                                        .italic,
-                                                                color: Colors
-                                                                    .grey),
-                                                            labelStyle:
-                                                                TextStyle(
-                                                                    color: Colors
-                                                                        .black),
-                                                            contentPadding:
-                                                                EdgeInsets.only(
-                                                                    top: 8),
-                                                          ),
-                                                        ),
-                                                      ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          InkWell(
+                                            onTap: () async {
+                                              performLoggedUserAction(
+                                                  context: context,
+                                                  action: () async {
+                                                    await FirestoreMethods()
+                                                        .pollComment(
+                                                            _poll.pollId,
+                                                            _commentController
+                                                                .text,
+                                                            user?.uid ?? '',
+                                                            user?.username ??
+                                                                '',
+                                                            user?.photoUrl ??
+                                                                '');
+                                                    setState(() {
+                                                      _commentController.text =
+                                                          "";
+                                                    });
+                                                  });
+                                            },
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                  right: 16.0, bottom: 12),
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.send,
+                                                      color: Colors.blueAccent,
+                                                      size: 12),
+                                                  Container(width: 3),
+                                                  Text(
+                                                    'SEND',
+                                                    style: TextStyle(
+                                                      color: Colors.blueAccent,
+                                                      letterSpacing: 0.5,
                                                     ),
                                                   ),
                                                 ],
                                               ),
                                             ),
                                           ),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.end,
-                                            children: [
-                                              InkWell(
-                                                onTap: () async {
-                                                  performLoggedUserAction(
-                                                      context: context,
-                                                      action: () async {
-                                                        await FirestoreMethods()
-                                                            .pollComment(
-                                                                _poll.pollId,
-                                                                _commentController
-                                                                    .text,
-                                                                user?.uid ?? '',
-                                                                user?.username ??
-                                                                    '',
-                                                                user?.photoUrl ??
-                                                                    '');
-                                                        setState(() {
-                                                          _commentController
-                                                              .text = "";
-                                                        });
-                                                      });
-                                                },
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          right: 16.0,
-                                                          bottom: 12),
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.send,
-                                                          color:
-                                                              Colors.blueAccent,
-                                                          size: 12),
-                                                      Container(width: 3),
-                                                      Text(
-                                                        'SEND',
-                                                        style: TextStyle(
-                                                          color:
-                                                              Colors.blueAccent,
-                                                          letterSpacing: 0.5,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          StreamBuilder(
-                                            stream: _selectedCommentFilter
-                                                        .value ==
-                                                    'all'
-                                                ? FirebaseFirestore.instance
-                                                    .collection('polls')
-                                                    .doc(_poll.pollId)
-                                                    .collection('comments')
+                                        ],
+                                      ),
+                                      StreamBuilder(
+                                        stream: _selectedCommentFilter.value ==
+                                                'all'
+                                            ? FirebaseFirestore.instance
+                                                .collection('polls')
+                                                .doc(_poll.pollId)
+                                                .collection('comments')
 
-                                                    // Sort
-                                                    .orderBy(_selectedCommentSort.key,
-                                                        descending:
-                                                            _selectedCommentSort
-                                                                .value)
-                                                    .snapshots()
-                                                : FirebaseFirestore.instance
-                                                    .collection('polls')
-                                                    .doc(_poll.pollId)
-                                                    .collection('comments')
+                                                // Sort
+                                                .orderBy(
+                                                    _selectedCommentSort.key,
+                                                    descending:
+                                                        _selectedCommentSort
+                                                            .value)
+                                                .snapshots()
+                                            : FirebaseFirestore.instance
+                                                .collection('polls')
+                                                .doc(_poll.pollId)
+                                                .collection('comments')
 
-                                                    // Filter
-                                                    .where(
-                                                        _selectedCommentFilter
-                                                            .value,
-                                                        whereIn: (_poll
-                                                                .toJson()[
-                                                                    _selectedCommentFilter
-                                                                        .key]
-                                                                .isNotEmpty
-                                                            ? _poll.toJson()[
+                                                // Filter
+                                                .where(
+                                                    _selectedCommentFilter
+                                                        .value,
+                                                    whereIn: (_poll
+                                                            .toJson()[
                                                                 _selectedCommentFilter
                                                                     .key]
-                                                            : [
-                                                                'placeholder_uid'
-                                                              ]))
+                                                            .isNotEmpty
+                                                        ? _poll.toJson()[
+                                                            _selectedCommentFilter
+                                                                .key]
+                                                        : ['placeholder_uid']))
 
-                                                    // Sort
-                                                    .orderBy(
+                                                // Sort
+                                                .orderBy(
+                                                    _selectedCommentSort.key,
+                                                    descending:
                                                         _selectedCommentSort
-                                                            .key,
-                                                        descending:
-                                                            _selectedCommentSort
-                                                                .value)
-                                                    .snapshots(),
-                                            builder: (content, snapshot) {
-                                              if (snapshot.connectionState ==
-                                                  ConnectionState.waiting) {
-                                                return widget.poll.comments ==
-                                                        null
-                                                    ? const Padding(
-                                                        padding:
-                                                            EdgeInsets.all(8.0),
-                                                        child: Center(
-                                                          child:
-                                                              CircularProgressIndicator(),
-                                                        ),
-                                                      )
-                                                    : CommentList(
-                                                        commentSnaps: (widget
-                                                                        .poll
-                                                                        .comments
+                                                            .value)
+                                                .snapshots(),
+                                        builder: (content, snapshot) {
+                                          if (snapshot.connectionState ==
+                                              ConnectionState.waiting) {
+                                            return widget.poll.comments == null
+                                                ? const Padding(
+                                                    padding:
+                                                        EdgeInsets.all(8.0),
+                                                    child: Center(
+                                                      child:
+                                                          CircularProgressIndicator(),
+                                                    ),
+                                                  )
+                                                : CommentList(
+                                                    commentSnaps:
+                                                        (widget.poll.comments
                                                                     as dynamic)
                                                                 ?.docs ??
                                                             [],
-                                                        poll: widget.poll,
-                                                        parentSetState: () {
-                                                          setState(() {});
-                                                        },
-                                                      );
-                                              }
-                                              widget.poll.comments =
-                                                  (snapshot.data as dynamic);
+                                                    poll: widget.poll,
+                                                    parentSetState: () {
+                                                      setState(() {});
+                                                    },
+                                                  );
+                                          }
+                                          widget.poll.comments =
+                                              (snapshot.data as dynamic);
 
-                                              return CommentList(
-                                                commentSnaps:
-                                                    (snapshot.data as dynamic)
-                                                            ?.docs ??
-                                                        [],
-                                                poll: _poll,
-                                                parentSetState: () {
-                                                  setState(() {});
-                                                },
-                                              );
+                                          return CommentList(
+                                            commentSnaps:
+                                                (snapshot.data as dynamic)
+                                                        ?.docs ??
+                                                    [],
+                                            poll: _poll,
+                                            parentSetState: () {
+                                              setState(() {});
                                             },
-                                          ),
-                                        ],
+                                          );
+                                        },
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    );
-                  },
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1412,7 +1576,7 @@ class CommentList extends StatelessWidget {
             child: Center(
               child: Text('No comments yet.',
                   style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 18,
 
                       // fontWeight: FontWeight.bold,
                       color: Color.fromARGB(255, 95, 95, 95))),

@@ -1,149 +1,64 @@
-import 'dart:async';
 import 'dart:typed_data';
+
 import 'package:aft/ATESTS/screens/profile_screen_edit.dart';
-import 'package:aft/ATESTS/screens/report_user_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'package:flutter/src/foundation/key.dart';
+import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/rxdart.dart';
-// import 'package:provider/provider.dart';
-import '../methods/auth_methods.dart';
-import '../models/postPoll.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../provider/user_provider.dart';
+import '../utils/utils.dart';
 import '../zFeeds/message_card.dart';
 import '../zFeeds/poll_card.dart';
+
 import '../models/poll.dart';
 import '../models/post.dart';
+import '../models/postPoll.dart';
 import '../models/user.dart';
-import '../utils/utils.dart';
-import '../provider/user_provider.dart';
+
+import '../methods/auth_methods.dart';
+
 import 'full_image_profile.dart';
 
-class Profile extends StatefulWidget {
-  final Post post;
-  const Profile({Key? key, required this.post}) : super(key: key);
+class ProfileUser extends StatefulWidget {
+  const ProfileUser({
+    Key? key,
+  }) : super(key: key);
 
   @override
-  State<Profile> createState() => _ProfileState();
+  State<ProfileUser> createState() => _ProfileUserState();
 }
 
-class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
+class _ProfileUserState extends State<ProfileUser>
+    with SingleTickerProviderStateMixin {
+  final _key1 = GlobalKey();
   final AuthMethods _authMethods = AuthMethods();
-  late Post _post;
+  bool posts = true;
+  bool comment = false;
   Uint8List? _image;
   int commentLen = 0;
   int _selectedIndex = 0;
   bool selectFlag = false;
-  User? _userProfile;
+  // User? _userProfile;
   final ScrollController _scrollController = ScrollController();
   TabController? _tabController;
+  // User? _user;
 
   List<dynamic> postList = [];
   List<dynamic> pollList = [];
-  StreamSubscription? loadDataStream;
-
-  // initList(index) async {
-  //   if (loadDataStream != null) {
-  //     loadDataStream!.cancel();
-  //     pollList = [];
-  //     postList = [];
-  //   }
-  //   if (index == 0) {
-  //     loadDataStream = FirebaseFirestore.instance
-  //         .collection('posts')
-  //         .where('uid', isEqualTo: _post.uid)
-  //         .orderBy('score', descending: true)
-  //         .snapshots()
-  //         .listen((event) {
-  //       print("aaaaaaaaaaaaaaaaaaaaaaaa");
-  //       if (postList.isEmpty) {
-  //         event.docChanges.forEach((change) {
-  //           postList.add(change.doc.data()!);
-  //         });
-  //       } else {
-  //         for (var change in event.docChanges) {
-  //           switch (change.type) {
-  //             case DocumentChangeType.added:
-  //               postList.add({
-  //                 ...change.doc.data()!,
-  //               });
-  //               break;
-  //             case DocumentChangeType.modified:
-  //               int i = postList.indexWhere((element) =>
-  //                   element["postId"] == change.doc.data()!["postId"]);
-  //               postList[i] = change.doc.data();
-  //               break;
-  //             case DocumentChangeType.removed:
-  //               postList.remove({...change.doc.data()!});
-  //               break;
-  //           }
-  //         }
-  //       }
-  //       setState(() {});
-  //     });
-  //   } else if (index == 1) {
-  //     loadDataStream = FirebaseFirestore.instance
-  //         .collection('polls')
-  //         .where('uid', isEqualTo: _post.uid)
-  //         .orderBy('totalVotes', descending: true)
-  //         .snapshots()
-  //         .listen((event) {
-  //       print(event.docs.length);
-  //       print("bbbbbbbbbbbbbbbbbbbbbbbbb");
-  //       if (pollList.isEmpty) {
-  //         event.docChanges.forEach((change) {
-  //           pollList.add(change.doc.data()!);
-  //         });
-  //         setState(() {});
-  //       } else {
-  //         for (var change in event.docChanges) {
-  //           switch (change.type) {
-  //             case DocumentChangeType.added:
-  //               pollList.add({
-  //                 ...change.doc.data()!,
-  //               });
-  //               break;
-  //             case DocumentChangeType.modified:
-  //               int i = pollList.indexWhere((element) =>
-  //                   element["pollId"] == change.doc.data()!["pollId"]);
-  //               pollList[i] = change.doc.data();
-  //               break;
-  //             case DocumentChangeType.removed:
-  //               pollList.remove({...change.doc.data()!});
-  //               break;
-  //           }
-  //         }
-  //         setState(() {});
-  //       }
-  //       setState(() {});
-  //     });
-  //   }
-  // }
-
-  // void getComments() async {
-  //   try {
-  //     QuerySnapshot snap = await FirebaseFirestore.instance
-  //         .collection('posts')
-
-  //         // .where('uid', isEqualTo: _post.uid)
-  //         .get();
-
-  //     setState(() {
-  //       commentLen = snap.docs.length;
-  //     });
-  //   } catch (e) {
-  //     showSnackBar(e.toString(), context);
-  //   }
-  //   setState(() {});
-  // }
 
   @override
   void initState() {
     super.initState();
-    _post = widget.post;
+
     initTabController();
-    getUserDetails();
-    // initList(0);
+    // getUserDetails();
   }
 
   initTabController() {
@@ -162,67 +77,16 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
     });
   }
 
-  getUserDetails() async {
-    User userProfile = await _authMethods.getUserProfileDetails(_post.uid);
-    setState(() {
-      _userProfile = userProfile;
-    });
-  }
-
-  _otherUsers(BuildContext context) async {
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return SimpleDialog(
-            children: [
-              SimpleDialogOption(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Icon(Icons.block),
-                    Container(width: 10),
-                    const Text('Block User',
-                        style: TextStyle(letterSpacing: 0.2, fontSize: 15)),
-                  ],
-                ),
-                onPressed: () {
-                  performLoggedUserAction(
-                    context: context,
-                    action: () {},
-                  );
-                },
-              ),
-              SimpleDialogOption(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Icon(Icons.report),
-                    Container(width: 10),
-                    const Text('Report User',
-                        style: TextStyle(letterSpacing: 0.2, fontSize: 15)),
-                  ],
-                ),
-                onPressed: () {
-                  performLoggedUserAction(
-                    context: context,
-                    action: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const ReportUserScreen()),
-                      );
-                    },
-                  );
-                },
-              ),
-            ],
-          );
-        });
-  }
+  // getUserDetails() async {
+  //   User userProfile = await _authMethods.getUserProfileDetails(_user?.uid);
+  //   setState(() {
+  //     _userProfile = userProfile;
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
-    User? user = Provider.of<UserProvider>(context).getUser;
+    User? _user = Provider.of<UserProvider>(context).getUser;
 
     return DefaultTabController(
       length: 3,
@@ -239,7 +103,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                 Container(
                   child: SliverAppBar(
                     backgroundColor: Colors.white,
-                    toolbarHeight: 300,
+                    toolbarHeight: 310,
                     automaticallyImplyLeading: false,
                     elevation: 0,
                     // pinned: false,
@@ -275,21 +139,21 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                             }),
                                         // Container(width: 8),
                                         Text(
-                                          _post.username,
+                                          _user!.username,
                                           style: TextStyle(
-                                            fontSize: _post.username.length ==
+                                            fontSize: _user.username.length ==
                                                     16
                                                 ? 15
-                                                : _post.username.length == 15
+                                                : _user.username.length == 15
                                                     ? 16
-                                                    : _post.username.length ==
+                                                    : _user.username.length ==
                                                             14
                                                         ? 17
-                                                        : _post.username
+                                                        : _user.username
                                                                     .length ==
                                                                 13
                                                             ? 18
-                                                            : _post.username
+                                                            : _user.username
                                                                         .length ==
                                                                     12
                                                                 ? 19
@@ -299,22 +163,17 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                           ),
                                         ),
                                         IconButton(
-                                            icon: Icon(
-                                                user?.uid == _post.uid
-                                                    ? Icons.create_outlined
-                                                    : Icons.more_vert,
+                                            icon: Icon(Icons.create_outlined,
                                                 color: Colors.black),
                                             onPressed: () {
-                                              user?.uid == _post.uid
-                                                  ? Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              EditProfile())).then(
-                                                      (value) async {
-                                                      await getUserDetails();
-                                                    })
-                                                  : _otherUsers(context);
+                                              Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          EditProfile()));
+                                              //     .then((value) async {
+                                              //   await getUserDetails();
+                                              // });
                                             }),
                                       ],
                                     ),
@@ -324,7 +183,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                   // color: Colors.green,
                                   child: Padding(
                                     padding: const EdgeInsets.only(
-                                        top: 4, bottom: 4.0, left: 0),
+                                        top: 4, bottom: 00.0, left: 0),
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceEvenly,
@@ -332,19 +191,17 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                         InkWell(
                                           onTap: () {
                                             Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        FullImageProfile(
-                                                            photo: _userProfile
-                                                                ?.photoUrl))).then(
-                                                (value) async {
-                                              await getUserDetails();
-                                            });
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      FullImageProfile(
+                                                          photo:
+                                                              _user.photoUrl)),
+                                            );
                                           },
                                           child: Stack(
                                             children: [
-                                              _userProfile?.photoUrl != null
+                                              _user.photoUrl != null
                                                   ? CircleAvatar(
                                                       radius: 59,
                                                       backgroundColor:
@@ -354,7 +211,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                                         radius: 57,
                                                         backgroundImage:
                                                             NetworkImage(
-                                                                '${_userProfile?.photoUrl}'),
+                                                                '${_user.photoUrl}'),
                                                         backgroundColor:
                                                             Color.fromARGB(255,
                                                                 245, 245, 245),
@@ -380,13 +237,13 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                                 child: Container(
                                                   child: Row(
                                                     children: [
-                                                      user?.profileFlag ==
+                                                      _user.profileFlag ==
                                                               "true"
                                                           ? Container(
                                                               width: 34,
                                                               height: 18,
                                                               child: Image.asset(
-                                                                  'icons/flags/png/${user?.country}.png',
+                                                                  'icons/flags/png/${_user.country}.png',
                                                                   package:
                                                                       'country_icons'))
                                                           : Row()
@@ -400,7 +257,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                                 child: Container(
                                                   child: Row(
                                                     children: [
-                                                      user?.profileBadge ==
+                                                      _user.profileBadge ==
                                                               "true"
                                                           ? CircleAvatar(
                                                               radius: 15,
@@ -460,7 +317,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                                     Text(
                                                         DateFormat.yMMMd()
                                                             .format(
-                                                          user?.dateCreated
+                                                          _user.dateCreated
                                                               .toDate(),
                                                         ),
                                                         style: TextStyle(
@@ -531,17 +388,17 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                       Padding(
                                         padding: const EdgeInsets.only(
                                             // top: 14.0,
-                                            right: 12,
-                                            left: 12,
+                                            right: 10,
+                                            left: 10,
                                             bottom: 4),
                                         child: Container(
                                           // color: Colors.blue,
                                           width:
                                               MediaQuery.of(context).size.width,
                                           child: Text(
-                                            _post.uid == user?.uid
+                                            _user.uid == _user.uid
                                                 ? 'About Me'
-                                                : 'About ${_post.username}',
+                                                : 'About ${_user.username}',
                                             textAlign: TextAlign.center,
                                             style: TextStyle(
                                               color: Colors.black,
@@ -560,8 +417,8 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                             width: 300,
                                             padding: EdgeInsets.only(
                                                 bottom: 0,
-                                                right: 10,
-                                                left: 10,
+                                                right: 12,
+                                                left: 12,
                                                 top: 4),
                                             alignment: Alignment.center,
                                             decoration: BoxDecoration(
@@ -584,23 +441,21 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                                 child: Flexible(
                                                   child: Text(
                                                     trimText(
-                                                                text: (_userProfile !=
+                                                                text: (_user !=
                                                                         null
-                                                                    ? _userProfile
-                                                                            ?.bio
+                                                                    ? _user.bio
                                                                         as String
                                                                     : "")) ==
                                                             ''
                                                         ? 'Empty Bio'
                                                         : trimText(
-                                                            text: _userProfile
-                                                                    ?.bio
+                                                            text: _user.bio
                                                                 as String),
                                                     // textAlign: TextAlign.center,
                                                     style: TextStyle(
                                                         color: trimText(
-                                                                    text: _userProfile != null
-                                                                        ? _userProfile?.bio
+                                                                    text: _user != null
+                                                                        ? _user.bio
                                                                             as String
                                                                         : "") ==
                                                                 ''
@@ -608,9 +463,8 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                                                 255, 126, 126, 126)
                                                             : Colors.black,
                                                         fontSize: trimText(
-                                                                    text: _userProfile !=
-                                                                            null
-                                                                        ? _userProfile?.bio
+                                                                    text: _user != null
+                                                                        ? _user.bio
                                                                             as String
                                                                         : "") ==
                                                                 ''
@@ -653,7 +507,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                     child: StreamBuilder(
                       stream: FirebaseFirestore.instance
                           .collection('posts')
-                          .where('uid', isEqualTo: _post.uid)
+                          .where('uid', isEqualTo: _user?.uid)
                           .snapshots(),
                       builder: (content, snapshot) {
                         return Container(
@@ -690,7 +544,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                               StreamBuilder(
                                   stream: FirebaseFirestore.instance
                                       .collection('polls')
-                                      .where('uid', isEqualTo: _post.uid)
+                                      .where('uid', isEqualTo: _user?.uid)
                                       .snapshots(),
                                   builder: (content, snapshot) {
                                     return Container(
@@ -724,21 +578,21 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                               StreamBuilder(
                                   stream: FirebaseFirestore.instance
                                       .collection('posts')
-                                      .where('plus', arrayContains: _post.uid)
+                                      .where('plus', arrayContains: _user?.uid)
                                       .snapshots(),
                                   builder: (content, snapshot1) {
                                     return StreamBuilder(
                                         stream: FirebaseFirestore.instance
                                             .collection('posts')
                                             .where('minus',
-                                                arrayContains: _post.uid)
+                                                arrayContains: _user?.uid)
                                             .snapshots(),
                                         builder: (content, snapshot2) {
                                           return StreamBuilder(
                                               stream: FirebaseFirestore.instance
                                                   .collection('posts')
                                                   .where('neutral',
-                                                      arrayContains: _post.uid)
+                                                      arrayContains: _user?.uid)
                                                   .snapshots(),
                                               builder: (content, snapshot3) {
                                                 return StreamBuilder(
@@ -747,7 +601,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                                         .collection('polls')
                                                         .where('allVotesUIDs',
                                                             arrayContains:
-                                                                _post.uid)
+                                                                _user?.uid)
                                                         .snapshots(),
                                                     builder:
                                                         (content, snapshot4) {
@@ -813,7 +667,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                 .collection('posts')
                                 // .doc()
                                 // .collection('comments')
-                                .where('uid', isEqualTo: _post.uid)
+                                .where('uid', isEqualTo: _user?.uid)
                                 .snapshots(),
                             builder: (context,
                                 AsyncSnapshot<
@@ -856,7 +710,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                 .collection('polls')
                                 // .doc()
                                 // .collection('comments')
-                                .where('uid', isEqualTo: _post.uid)
+                                .where('uid', isEqualTo: _user?.uid)
                                 .snapshots(),
                             builder: (context,
                                 AsyncSnapshot<
@@ -928,14 +782,14 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                     // .doc()
                                     // .collection('comments')
                                     .where('allVotesUIDs',
-                                        arrayContains: _post.uid)
+                                        arrayContains: _user?.uid)
                                     .snapshots(),
                                 FirebaseFirestore.instance
                                     .collection('polls')
                                     // .doc()
                                     // .collection('comments')
                                     .where('allVotesUIDs',
-                                        arrayContains: _post.uid)
+                                        arrayContains: _user?.uid)
                                     .snapshots(),
                               ]),
                               builder: (context,
@@ -1017,8 +871,6 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                               },
                             );
                           }),
-
-                          // Text('list of all voted polls + messages'),
                         ],
                       ),
                     ),

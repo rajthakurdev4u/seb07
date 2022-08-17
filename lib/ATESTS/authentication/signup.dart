@@ -3,8 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../methods/auth_methods.dart';
-import '../other/text_field.dart';
-import '../other/utils.dart.dart';
+import '../utils/text_field.dart';
+import '../utils/utils.dart';
 
 import '../screens/filter_arrays.dart';
 
@@ -32,9 +32,10 @@ class _SignupScreenState extends State<SignupScreen> {
   // bool textfield3selected = false;
   bool _passwordVisible = false;
 
-  var country = 'us';
+  var country = '';
   String oneValue = '';
-  String isFT = 'false';
+  String isVerified = 'false';
+  String isPending = 'true';
   var countryIndex;
 
   @override
@@ -112,7 +113,8 @@ class _SignupScreenState extends State<SignupScreen> {
       // file: _image!,
       profilePicFile: _image,
       country: country,
-      isFT: isFT,
+      isVerified: isVerified,
+      isPending: isPending,
       bio: '',
     );
 
@@ -264,7 +266,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                       //     MediaQuery.of(context).size.width * 1 -
                                       //         64,
                                       // height: 70,
-                                      child: TextField(
+                                      child: TextFormField(
                                         textInputAction: TextInputAction.next,
                                         controller: _usernameController,
                                         maxLength: 16,

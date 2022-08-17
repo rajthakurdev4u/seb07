@@ -2,12 +2,11 @@ import 'package:aft/ATESTS/provider/user_provider.dart';
 import 'package:aft/ATESTS/responsive/AMobileScreenLayout.dart';
 import 'package:aft/ATESTS/responsive/AResponsiveLayout.dart';
 import 'package:aft/ATESTS/responsive/AWebScreenLayout.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'package:camera/camera.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,8 +33,9 @@ class MyApp extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         FocusScopeNode currentFocus = FocusScope.of(context);
-        if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null)
+        if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
           FocusManager.instance.primaryFocus!.unfocus();
+        }
       },
       child: MultiProvider(
         providers: [
@@ -46,8 +46,7 @@ class MyApp extends StatelessWidget {
         child: MaterialApp(
           theme: ThemeData().copyWith(
             scaffoldBackgroundColor: Colors.white,
-            colorScheme:
-            ThemeData().colorScheme.copyWith(primary: Colors.blueGrey),
+            colorScheme: ThemeData().colorScheme.copyWith(primary: Colors.blueGrey),
           ),
           // theme: ThemeData(
           // inputDecorationTheme: const InputDecorationTheme(

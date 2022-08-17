@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/user.dart';
-import '../other/utils.dart.dart';
+import '../utils/utils.dart';
 import '../provider/user_provider.dart';
 import 'auth_methods.dart';
 

@@ -22,7 +22,7 @@ import '../camera/preview.dart';
 import '../methods/firestore_methods.dart';
 import '../methods/storage_methods.dart';
 import '../models/user.dart';
-import '../other/utils.dart.dart';
+import '../utils/utils.dart';
 import '../provider/user_provider.dart';
 import 'filter_arrays.dart';
 import 'full_image_add.dart';
@@ -450,9 +450,6 @@ class _AddPostState extends State<AddPost> {
                       color: Colors.white,
                       child: InkWell(
                         onTap: () async {
-                          Future.delayed(const Duration(milliseconds: 150), () {
-                            Navigator.of(context).pop();
-                          });
                           File file = await pickVideo(
                             ImageSource.gallery,
                           );
@@ -460,6 +457,9 @@ class _AddPostState extends State<AddPost> {
                             _file = (file as File).readAsBytesSync();
                             _videoFile = (file as File);
                             _isVideoFile = true;
+                          });
+                          Future.delayed(const Duration(milliseconds: 150), () {
+                            Navigator.of(context).pop();
                           });
                         },
                         child: Padding(
@@ -1032,15 +1032,17 @@ class _AddPostState extends State<AddPost> {
                                     Padding(
                                       padding:
                                           const EdgeInsets.only(bottom: 1.0),
-                                      child: user != null
+                                      child: user != null && user?.country != ""
                                           ? Container(
                                               width: 24,
                                               height: 14,
                                               child: Image.asset(
                                                   'icons/flags/png/${user?.country}.png',
+                                                  width: 24,
+                                                  height: 14,
                                                   package: 'country_icons'),
                                             )
-                                          : Container(),
+                                          : Row(),
                                     ),
                                   ],
                                 ),
