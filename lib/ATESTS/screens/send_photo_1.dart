@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:aft/ATESTS/screens/send_photo_2.dart';
+import 'package:aft/ATESTS/screens/send_photo_3.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,8 +26,21 @@ class _SendPhotoState extends State<SendPhoto> {
             Uint8List? file = await openCamera(
               context: context,
               cameraFileType: CameraFileType.image,
-              add: cameraTitle,
+              add: "true",
             );
+
+            print('SendPhoto file: ${file}');
+            if(file != null) {
+              emailAttachmentPhotos.clear();
+              emailAttachmentPhotos.add(file);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                         SendPhotoTwo()
+                        ),
+              );
+            }
           },
           child: Container(
             width: 200,

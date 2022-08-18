@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:aft/ATESTS/screens/send_photo_3.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,6 +16,7 @@ class SendPhotoTwo extends StatefulWidget {
 
 class _SendPhotoTwoState extends State<SendPhotoTwo> {
   var cameraTitle = "2";
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,8 +26,17 @@ class _SendPhotoTwoState extends State<SendPhotoTwo> {
             Uint8List? file = await openCamera(
               context: context,
               cameraFileType: CameraFileType.image,
-              add: cameraTitle,
+              add: "true",
             );
+
+            print('SendPhoto file: ${file}');
+            if (file != null) {
+              emailAttachmentPhotos.add(file);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SendPhotoThree()),
+              );
+            }
           },
           child: Container(
             width: 200,

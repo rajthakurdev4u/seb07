@@ -278,4 +278,29 @@ class AuthMethods {
       print(err.toString());
     }
   }
+
+  Future<String> addEmailAttachmentPhotos({
+    required String photoUrlOne,
+    required String photoUrlTwo,
+  }) async {
+    String res = "Some error ocurred";
+    try {
+      User currentUser = _auth.currentUser!;
+      await _firestore.collection('users').doc(currentUser.uid).update(
+        {
+          'email_attachment_photos': {
+            'photoUrlOne': photoUrlOne,
+            'photoUrlTwo': photoUrlTwo,
+          }
+        },
+      );
+
+      res = "success";
+    } catch (e) {
+      print(
+        e.toString(),
+      );
+    }
+    return res;
+  }
 }

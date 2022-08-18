@@ -208,12 +208,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     child: InkWell(
                                       splashColor: Colors.grey.withOpacity(0.5),
                                       onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) =>
-                                                  SendPhoto()),
-                                        );
+
+                                        performLoggedUserAction(
+                                            context: context,
+                                            action: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        SendPhoto()),
+                                              );
+                                            });
+
                                       },
                                       child: Padding(
                                         padding: const EdgeInsets.only(
